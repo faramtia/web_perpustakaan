@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('event', function (Blueprint $table) {
-            $table->id();
-            $table->string('judul', 255);
-            $table->text('deskripsi')->nullable();
-            $table->date('tanggal_mulai')->nullable();
-            $table->date('tanggal_selesai')->nullable();
-            $table->string('lokasi', 150)->nullable();
-            $table->unsignedInteger('kuota')->default(0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('event')) {
+            Schema::create('event', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('judul', 200);
+                $table->text('deskripsi')->nullable();
+                $table->date('tanggal_mulai')->nullable();
+                $table->date('tanggal_selesai')->nullable();
+                $table->string('lokasi', 100);
+                $table->integer('kuota')->nullable();
+                $table->primary('id');
+            });
+        }
     }
 
     public function down(): void

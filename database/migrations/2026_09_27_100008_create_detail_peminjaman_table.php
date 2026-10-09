@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('detail_peminjaman', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('peminjaman_id')->constrained('peminjaman')->cascadeOnDelete();
-            $table->foreignId('buku_id')->constrained('buku')->cascadeOnDelete();
-            $table->unsignedInteger('jumlah')->default(1);
-            $table->enum('status_kembali', ['belum', 'sudah'])->default('belum');
-            $table->unsignedInteger('denda')->default(0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('detail_peminjaman')) {
+            Schema::create('detail_peminjaman', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('peminjaman_id');
+                $table->integer('buku_id');
+                $table->integer('jumlah')->default(1);
+                $table->primary('id');
+                $table->foreign('peminjaman_id')->references('id')->on('peminjaman')->cascadeOnDelete()->cascadeOnUpdate();
+                $table->foreign('buku_id')->references('id')->on('buku')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

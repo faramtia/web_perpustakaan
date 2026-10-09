@@ -12,10 +12,13 @@ class JenisUser extends Model
 
     protected $table = 'jenis_user';
 
-    protected $fillable = ['nama_role', 'deskripsi'];
+    // Tabel jenis_user tidak punya created_at/updated_at.
+    // public $timestamps = false;
+
+    protected $fillable = ['nama_role', 'lama_pinjam_hari', 'denda_per_hari'];
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'jenis_user_id');
     }
 }

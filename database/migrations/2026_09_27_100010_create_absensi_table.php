@@ -8,15 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('absensi', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->date('tanggal')->useCurrent();
-            $table->time('waktu_masuk')->nullable();
-            $table->time('waktu_keluar')->nullable();
-            $table->enum('metode', ['qr', 'manual'])->default('manual');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('absensi')) {
+            Schema::create('absensi', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('user_id');
+                $table->date('tanggal');
+                $table->time('waktu_masuk')->nullable();
+                $table->primary('id');
+                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

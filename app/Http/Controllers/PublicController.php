@@ -12,12 +12,19 @@ class PublicController extends Controller
         return view('public.home', [
             'totalKoleksi' => Buku::sum('stok'),
             'totalJudul' => Buku::count(),
-            'koleksiBaru' => Buku::latest()->take(5)->get(),
+
+            'koleksiBaru' => Buku::orderByDesc('tahun_terbit')
+                ->take(3)
+                ->get(),
+
             'koleksiPopuler' => Buku::withCount('detailPeminjaman')
                 ->orderByDesc('detail_peminjaman_count')
-                ->take(5)
+                ->take(3)
                 ->get(),
-            'artikel' => Artikel::latest('tanggal_terbit')->take(3)->get(),
+
+            'artikel' => Artikel::with('kategori')->orderByDesc('tanggal_upload')
+                ->take(3)
+                ->get(),
         ]);
     }
 }

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 @section('title', 'E-Jurnal')
 @section('page-title', 'E-Jurnal')
 
@@ -25,7 +25,7 @@
             <div class="bg-white border rounded-xl p-5">
                 <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $j->kategori->nama_kategori ?? 'Umum' }}</p>
                 <h3 class="font-semibold text-gray-800 mb-1">{{ $j->judul }}</h3>
-                <p class="text-xs text-gray-400 mb-2">{{ $j->penulis }} &middot; {{ $j->tahun }}</p>
+                <p class="text-xs text-gray-400 mb-2">{{ $j->penulis }} &middot; {{ $j->tahun_terbit }}</p>
                 <p class="text-sm text-gray-600 line-clamp-3">{{ $j->abstrak }}</p>
                 @if ($j->lokasi_rak)
                     <p class="text-xs text-gray-400 mt-3">📍 Versi lengkap: {{ $j->lokasi_rak }}</p>

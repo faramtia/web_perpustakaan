@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('peminjaman', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('petugas_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->date('tanggal_pinjam')->nullable();
-            $table->date('tanggal_jatuh_tempo')->nullable();
-            $table->date('tanggal_kembali')->nullable();
-            $table->enum('status', ['pending', 'aktif', 'ditolak', 'dikembalikan', 'terlambat'])->default('pending');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('peminjaman')) {
+            Schema::create('peminjaman', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('user_id');
+                $table->date('tanggal_pinjam');
+                $table->date('tanggal_kembali')->nullable();
+                $table->string('status', 50)->default('Dipinjam');
+                $table->date('tanggal_jatuh_tempo')->nullable();
+                $table->primary('id');
+                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

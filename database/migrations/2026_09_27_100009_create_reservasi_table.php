@@ -8,14 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('reservasi', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('buku_id')->constrained('buku')->cascadeOnDelete();
-            $table->date('tanggal_reservasi')->useCurrent();
-            $table->enum('status', ['menunggu', 'tersedia', 'dibatalkan'])->default('menunggu');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('reservasi')) {
+            Schema::create('reservasi', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('user_id');
+                $table->integer('buku_id');
+                $table->date('tanggal_reservasi');
+                $table->string('status', 50)->default('Menunggu');
+                $table->primary('id');
+                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+                $table->foreign('buku_id')->references('id')->on('buku')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

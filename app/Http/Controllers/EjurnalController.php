@@ -13,9 +13,15 @@ class EjurnalController extends Controller
     public function index(Request $request): View
     {
         $ejurnal = Ejurnal::with('kategori')
-            ->when($request->q, fn ($q) => $q->where('judul', 'like', "%{$request->q}%"))
-            ->latest()
-            ->paginate(10);
+            ->when(
+                $request->q,
+                fn ($q) => $q
+                    ->where('judul', 'like', "%{$request->q}%")
+                    ->orWhere('penulis', 'like', "%{$request->q}%")
+            )
+            ->orderByDesc('tahun_terbit')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('ejurnal.index', compact('ejurnal'));
     }
@@ -32,8 +38,8 @@ class EjurnalController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'penulis' => ['nullable', 'string', 'max:150'],
             'abstrak' => ['required', 'string'],
-            'tahun' => ['nullable', 'digits:4'],
-            'lokasi_rak' => ['nullable', 'string', 'max:100'],
+            'tahun_terbit' => ['nullable', 'digits:4'],
+            'file_jurnal' => ['nullable', 'string', 'max:255'],
         ]);
 
         Ejurnal::create($data);

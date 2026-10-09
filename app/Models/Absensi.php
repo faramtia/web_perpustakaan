@@ -9,7 +9,10 @@ class Absensi extends Model
 {
     protected $table = 'absensi';
 
-    protected $fillable = ['user_id', 'tanggal', 'waktu_masuk', 'waktu_keluar', 'metode'];
+    // Tabel ini tidak punya kolom created_at / updated_at.
+    public $timestamps = false;
+
+    protected $fillable = ['user_id', 'tanggal', 'waktu_masuk'];
 
     protected function casts(): array
     {

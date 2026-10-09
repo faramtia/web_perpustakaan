@@ -8,16 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('ejurnal', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('kategori_id')->nullable()->constrained('kategori')->nullOnDelete();
-            $table->string('judul', 255);
-            $table->string('penulis', 150)->nullable();
-            $table->text('abstrak');
-            $table->year('tahun')->nullable();
-            $table->string('lokasi_rak', 100)->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('ejurnal')) {
+            Schema::create('ejurnal', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('kategori_id');
+                $table->string('judul', 200);
+                $table->string('penulis', 150)->nullable();
+                $table->text('abstrak')->nullable();
+                $table->string('file_jurnal', 255)->nullable();
+                $table->year('tahun_terbit')->nullable();
+                $table->primary('id');
+                $table->foreign('kategori_id')->references('id')->on('kategori')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

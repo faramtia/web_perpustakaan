@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 @section('title', 'Event Semester')
 @section('page-title', 'Event Semester')
 

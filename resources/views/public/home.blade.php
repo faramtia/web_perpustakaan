@@ -92,7 +92,7 @@
                 @forelse ($koleksiBaru as $buku)
                     <li class="flex justify-between border-b pb-2">
                         <span>{{ $buku->judul }}</span>
-                        <span class="text-gray-400">{{ $buku->created_at->format('d M Y') }}</span>
+                        <span class="text-gray-400">{{ $buku->tahun_terbit }}</span>
                     </li>
                 @empty
                     <li class="text-gray-400 italic">Belum ada koleksi baru.</li>
@@ -112,7 +112,7 @@
                 <a href="{{ route('artikel.index') }}" class="bg-white border rounded-xl overflow-hidden hover:shadow-sm transition">
                     <div class="h-28 bg-gold-100 flex items-center justify-center text-3xl">📰</div>
                     <div class="p-4">
-                        <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ str_replace('_', ' ', $item->kategori) }}</p>
+                        <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $item->kategori->nama_kategori ?? 'Artikel' }}</p>
                         <p class="text-sm font-semibold text-gray-700 line-clamp-2">{{ $item->judul }}</p>
                     </div>
                 </a>

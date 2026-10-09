@@ -8,22 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('jenis_user_id')
-                ->nullable()
-                ->after('id')
-                ->constrained('jenis_user')
-                ->nullOnDelete();
-
-            $table->string('nim_nip', 30)->nullable()->after('name');
-        });
+        if (!Schema::hasTable('user')) {
+            Schema::create('user', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('jenis_user_id');
+                $table->string('nama', 100);
+                $table->string('nim_nip', 50)->nullable()->unique();
+                $table->string('email', 100)->nullable()->unique();
+                $table->string('password', 255);
+                $table->string('remember_token', 100)->nullable();
+                $table->primary('id');
+                $table->foreign('jenis_user_id')->references('id')->on('jenis_user')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('jenis_user_id');
-            $table->dropColumn('nim_nip');
-        });
+        Schema::dropIfExists('user');
     }
 };

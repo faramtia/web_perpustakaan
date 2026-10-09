@@ -8,15 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tipe_koleksi', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_tipe', 50); // buku, e-book, e-jurnal, e-TGA
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tipe_koleksi')) {
+            Schema::create('tipe_koleksi', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('nama_tipe', 100);
+                $table->primary('id');
+            });
+        }
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('tipe_koleksi');
-    }
+    public function down(): void { Schema::dropIfExists('tipe_koleksi'); }
 };

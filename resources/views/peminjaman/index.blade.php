@@ -26,6 +26,7 @@
                     <th class="px-5 py-3 font-medium">Tgl Pinjam</th>
                     <th class="px-5 py-3 font-medium">Jatuh Tempo</th>
                     <th class="px-5 py-3 font-medium">Status</th>
+                    <th class="px-5 py-3 font-medium">Denda</th>
                     @if (in_array($role, ['admin','petugas']))
                         <th class="px-5 py-3 font-medium">Aksi</th>
                     @endif
@@ -40,10 +41,14 @@
                         <td class="px-5 py-3">{{ $p->detail->pluck('buku.judul')->join(', ') }}</td>
                         <td class="px-5 py-3">{{ optional($p->tanggal_pinjam)->format('d M Y') ?? '-' }}</td>
                         <td class="px-5 py-3">{{ optional($p->tanggal_jatuh_tempo)->format('d M Y') ?? '-' }}</td>
-                        <td class="px-5 py-3"><x-status-badge :status="$p->status" /></td>
+                        <td class="px-5 py-3"><x-status-badge :status="$p->status_tampil" /></td>
+                        <td class="px-5 py-3">
+                            @php $totalDenda = $p->denda->sum('jumlah_denda'); @endphp
+                            {{ $totalDenda > 0 ? 'Rp '.number_format($totalDenda, 0, ',', '.') : '-' }}
+                        </td>
                         @if (in_array($role, ['admin','petugas']))
                             <td class="px-5 py-3 flex gap-2">
-                                @if ($p->status === 'pending')
+                                @if ($p->status === 'Menunggu')
                                     <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p) }}">
                                         @csrf
                                         <input type="hidden" name="keputusan" value="setuju">
@@ -54,7 +59,7 @@
                                         <input type="hidden" name="keputusan" value="tolak">
                                         <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg">Tolak</button>
                                     </form>
-                                @elseif ($p->status === 'aktif')
+                                @elseif ($p->status === 'Dipinjam')
                                     <form method="POST" action="{{ route('petugas.peminjaman.kembalikan', $p) }}">
                                         @csrf
                                         <button class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg">Tandai Kembali</button>
@@ -66,7 +71,7 @@
                         @endif
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-5 py-6 text-center text-gray-400 italic">Belum ada transaksi.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-6 text-center text-gray-400 italic">Belum ada transaksi.</td></tr>
                 @endforelse
             </tbody>
         </table>

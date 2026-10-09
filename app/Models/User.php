@@ -14,8 +14,13 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    // Tabel di database bernama "user" (bukan "users") dan tidak punya created_at/updated_at.
+    protected $table = 'user';
+
+    public $timestamps = false;
+
     protected $fillable = [
-        'name', 'email', 'password', 'jenis_user_id', 'nim_nip',
+        'nama', 'email', 'password', 'jenis_user_id', 'nim_nip', 'password', 'remember_token',
     ];
 
     protected $hidden = [
@@ -25,23 +30,34 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            // 'hashed' otomatis meng-hash password saat disimpan.
             'password' => 'hashed',
         ];
     }
 
     public function jenisUser(): BelongsTo
     {
-        return $this->belongsTo(JenisUser::class);
+        return $this->belongsTo(JenisUser::class, 'jenis_user_id');
     }
 
     /**
-     * Accessor supaya kode Blade lama yang pakai $user->role tetap jalan,
-     * walau datanya sekarang diambil lewat relasi jenis_user.
+     * Supaya semua Blade lama yang memakai $user->name tetap jalan,
+     * walau kolom di database bernama "nama".
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->nama;
+    }
+
+    /**
+     * Role selalu dikembalikan huruf kecil ('admin', 'petugas', 'mahasiswa', 'dosen'),
+     * karena di database tertulis 'Admin', 'Mahasiswa', 'Dosen', 'petugas' (campur).
      */
     public function getRoleAttribute(): ?string
     {
-        return $this->jenisUser?->nama_role;
+        $role = $this->jenisUser?->nama_role;
+
+        return $role ? strtolower(trim($role)) : null;
     }
 
     public function isAdmin(): bool
@@ -92,6 +108,6 @@ class User extends Authenticatable
 
     public function artikel(): HasMany
     {
-        return $this->hasMany(Artikel::class, 'penulis_id');
+        return $this->hasMany(Artikel::class, 'user_id');
     }
 }

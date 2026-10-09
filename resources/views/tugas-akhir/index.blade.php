@@ -49,16 +49,16 @@
                         <td class="px-5 py-3 text-gray-500">{{ $ta->catatan_reviewer ?? '-' }}</td>
                         @if (in_array($role, ['admin','petugas']))
                             <td class="px-5 py-3">
-                                @if ($ta->status === 'diajukan')
+                                @if ($ta->status === 'Menunggu')
                                     <div class="flex gap-2">
                                         <form method="POST" action="{{ route('petugas.tugas-akhir.review', $ta) }}">
                                             @csrf
-                                            <input type="hidden" name="keputusan" value="disetujui">
+                                            <input type="hidden" name="keputusan" value="Disetujui">
                                             <button class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Setujui</button>
                                         </form>
                                         <form method="POST" action="{{ route('petugas.tugas-akhir.review', $ta) }}">
                                             @csrf
-                                            <input type="hidden" name="keputusan" value="ditolak">
+                                            <input type="hidden" name="keputusan" value="Ditolak">
                                             <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg">Tolak</button>
                                         </form>
                                     </div>

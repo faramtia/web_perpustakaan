@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 @section('title', 'Artikel & Blog')
 @section('page-title', 'Artikel & Blog')
 
@@ -19,10 +19,10 @@
             <div class="bg-white border rounded-xl overflow-hidden">
                 <div class="h-32 bg-gold-100 flex items-center justify-center text-4xl">📰</div>
                 <div class="p-4">
-                    <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ str_replace('_', ' ', $a->kategori) }}</p>
+                    <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $a->kategori->nama_kategori ?? 'Artikel' }}</p>
                     <h3 class="font-semibold text-gray-800 mb-1">{{ $a->judul }}</h3>
-                    <p class="text-xs text-gray-400 mb-2">Oleh {{ $a->penulis->name }} &middot; {{ optional($a->tanggal_terbit)->format('d M Y') }}</p>
-                    <p class="text-sm text-gray-600 line-clamp-3">{{ $a->konten }}</p>
+                    <p class="text-xs text-gray-400 mb-2">Oleh {{ $a->penulis->name ?? '-' }} &middot; {{ optional($a->tanggal_upload)->format('d M Y') }}</p>
+                    <p class="text-sm text-gray-600 line-clamp-3">{{ $a->isi_artikel }}</p>
                 </div>
             </div>
         @empty

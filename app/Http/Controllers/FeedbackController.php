@@ -20,7 +20,7 @@ class FeedbackController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        return view('feedback.index', ['feedback' => $query->latest()->paginate(10)]);
+        return view('feedback.index', ['feedback' => $query->latest('id')->paginate(10)]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -33,7 +33,8 @@ class FeedbackController extends Controller
         Feedback::create([
             ...$data,
             'user_id' => Auth::id(),
-            'status' => 'baru',
+            'tanggal' => today(),
+            'status' => Feedback::BELUM_DIBALAS,
         ]);
 
         return back()->with('success', 'Terkirim! Petugas akan segera merespons.');
@@ -48,7 +49,7 @@ class FeedbackController extends Controller
 
         $feedback->update([
             'balasan' => $request->balasan,
-            'status' => 'selesai',
+            'status' => Feedback::SUDAH_DIBALAS,
         ]);
 
         return back()->with('success', 'Balasan terkirim.');

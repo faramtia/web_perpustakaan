@@ -22,7 +22,7 @@ class ReservasiController extends Controller
         }
 
         return view('reservasi.index', [
-            'reservasi' => $query->latest()->paginate(10),
+            'reservasi' => $query->latest('id')->paginate(10),
             'bukuHabis' => Buku::where('stok', 0)->orderBy('judul')->get(),
         ]);
     }
@@ -35,7 +35,7 @@ class ReservasiController extends Controller
             'user_id' => Auth::id(),
             'buku_id' => $request->buku_id,
             'tanggal_reservasi' => today(),
-            'status' => 'menunggu',
+            'status' => Reservasi::MENUNGGU,
         ]);
 
         return back()->with('success', 'Reservasi dibuat. Kamu akan diberi tahu saat buku tersedia.');
@@ -43,7 +43,14 @@ class ReservasiController extends Controller
 
     public function batalkan(Reservasi $reservasi): RedirectResponse
     {
-        $reservasi->update(['status' => 'dibatalkan']);
+        // Anggota hanya boleh membatalkan reservasi miliknya sendiri.
+        abort_unless($reservasi->user_id === Auth::id(), 403);
+
+        if ($reservasi->status !== Reservasi::MENUNGGU) {
+            return back()->with('error', 'Reservasi ini tidak bisa dibatalkan.');
+        }
+
+        $reservasi->update(['status' => Reservasi::DIBATALKAN]);
 
         return back()->with('success', 'Reservasi dibatalkan.');
     }

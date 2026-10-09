@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 @section('title', 'Katalog Buku')
 @section('page-title', 'Katalog Buku')
 

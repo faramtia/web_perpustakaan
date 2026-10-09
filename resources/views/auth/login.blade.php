@@ -21,31 +21,41 @@
 
         <div class="bg-white rounded-2xl border p-6 sm:p-8">
 
-            @if ($errors->any())
-                <div class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
+            @if (session('status'))
+                <div class="mb-4 rounded-lg bg-green-100 text-green-700 px-4 py-3 text-sm">
+                    {{ session('status') }}
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+            <form method="POST" action="{{ route('login') }}" class="space-y-4" novalidate>
                 @csrf
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                           class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
+                    <label for="email" class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                           class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400 @error('email') border-red-400 @enderror">
+                    @error('email')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Password</label>
-                    <input type="password" name="password" required
-                           class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
+                    <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input id="password" type="password" name="password" required autocomplete="current-password"
+                               class="w-full border rounded-lg pl-4 pr-16 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400 @error('password') border-red-400 @enderror">
+                        <button type="button" id="togglePassword"
+                                class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-gray-500 hover:text-gold-700">
+                            Lihat
+                        </button>
+                    </div>
+                    @error('password')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <label class="flex items-center gap-2 text-sm text-gray-500">
-                    <input type="checkbox" name="remember" class="rounded border-gray-300">
+                    <input type="checkbox" name="remember" class="rounded border-gray-300" @checked(old('remember'))>
                     Ingat saya
                 </label>
 
@@ -64,18 +74,15 @@
         <p class="text-center text-xs text-gray-400 mt-6">
             <a href="{{ route('home') }}" class="hover:underline">&larr; Kembali ke beranda</a>
         </p>
-
-        {{-- Bantuan buat testing: akun contoh dari seeder --}}
-        <div class="mt-6 bg-white/60 border border-dashed rounded-xl p-4 text-xs text-gray-500">
-            <p class="font-semibold mb-1">Akun contoh (dari seeder, password: <code>password</code>):</p>
-            <ul class="space-y-0.5">
-                <li>admin@pnl.ac.id</li>
-                <li>petugas@pnl.ac.id</li>
-                <li>mahasiswa@pnl.ac.id</li>
-                <li>dosen@pnl.ac.id</li>
-            </ul>
-        </div>
     </div>
 
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const input = document.getElementById('password');
+            const tampil = input.type === 'password';
+            input.type = tampil ? 'text' : 'password';
+            this.textContent = tampil ? 'Sembunyikan' : 'Lihat';
+        });
+    </script>
 </body>
 </html>

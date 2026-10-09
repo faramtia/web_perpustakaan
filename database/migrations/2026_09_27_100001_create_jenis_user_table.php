@@ -8,12 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('jenis_user', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_role', 50)->unique(); // admin, petugas, mahasiswa, dosen
-            $table->string('deskripsi')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('jenis_user')) {
+            Schema::create('jenis_user', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('nama_role', 20)->nullable();
+                $table->integer('lama_pinjam_hari')->default(90);
+                $table->integer('denda_per_hari')->default(1000);
+                $table->primary('id');
+            });
+        }
     }
 
     public function down(): void

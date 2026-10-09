@@ -31,7 +31,7 @@
                         @if (in_array($role, ['admin','petugas']))
                             <span class="font-medium text-gray-700">{{ $f->user->name }}</span>
                         @endif
-                        <span class="text-xs text-gray-400 capitalize ml-1">({{ str_replace('_',' ',$f->jenis) }})</span>
+                        <span class="text-xs text-gray-400 capitalize ml-1">({{ str_replace('_', ' ', $f->jenis ?? 'umum') }})</span>
                     </div>
                     <x-status-badge :status="$f->status" />
                 </div>

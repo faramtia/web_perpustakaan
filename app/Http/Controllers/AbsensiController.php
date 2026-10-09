@@ -21,7 +21,7 @@ class AbsensiController extends Controller
         }
 
         return view('absensi.index', [
-            'absensi' => $query->latest('tanggal')->paginate(15),
+            'absensi' => $query->orderByDesc('tanggal')->orderByDesc('id')->paginate(15),
         ]);
     }
 
@@ -31,14 +31,21 @@ class AbsensiController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', 'exists:user,id'],
         ]);
+
+        $sudahAbsen = Absensi::where('user_id', $request->user_id)
+            ->whereDate('tanggal', today())
+            ->exists();
+
+        if ($sudahAbsen) {
+            return back()->with('error', 'Anggota ini sudah tercatat hadir hari ini.');
+        }
 
         Absensi::create([
             'user_id' => $request->user_id,
             'tanggal' => today(),
             'waktu_masuk' => now()->format('H:i:s'),
-            'metode' => 'manual',
         ]);
 
         return back()->with('success', 'Absensi tercatat.');

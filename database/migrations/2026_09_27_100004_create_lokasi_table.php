@@ -8,15 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('lokasi', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_ruang', 100);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('lokasi')) {
+            Schema::create('lokasi', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->string('nama_ruang', 100);
+                $table->text('keterangan')->nullable();
+                $table->primary('id');
+            });
+        }
     }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('lokasi');
-    }
+    public function down(): void { Schema::dropIfExists('lokasi'); }
 };

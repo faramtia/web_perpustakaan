@@ -50,7 +50,7 @@
                         <td class="px-5 py-3"><x-status-badge :status="$r->status" /></td>
                         @if (in_array($role, ['mahasiswa','dosen']))
                             <td class="px-5 py-3">
-                                @if ($r->status === 'menunggu')
+                                @if ($r->status === 'Menunggu')
                                     <form method="POST" action="{{ route('anggota.reservasi.batal', $r) }}">
                                         @csrf
                                         <button class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg">Batalkan</button>

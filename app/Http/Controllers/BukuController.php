@@ -16,8 +16,8 @@ class BukuController extends Controller
     {
         $buku = Buku::with(['kategori', 'lokasi', 'tipeKoleksi'])
             ->when($request->q, fn ($query) => $query->where('judul', 'like', "%{$request->q}%")
-                ->orWhere('penulis', 'like', "%{$request->q}%"))
-            ->latest()
+            ->orWhere('penulis', 'like', "%{$request->q}%"))
+            ->orderByDesc('tahun_terbit')
             ->paginate(10)
             ->withQueryString();
 
@@ -39,7 +39,7 @@ class BukuController extends Controller
 
         Buku::create($data);
 
-        return redirect()->route('buku.index')->with('success', 'Buku berhasil ditambahkan.');
+        return redirect()->route('katalog.index')->with('success', 'Buku berhasil ditambahkan.');
     }
 
     public function edit(Buku $buku): View
@@ -58,27 +58,27 @@ class BukuController extends Controller
 
         $buku->update($data);
 
-        return redirect()->route('buku.index')->with('success', 'Buku berhasil diperbarui.');
+        return redirect()->route('katalog.index')->with('success', 'Buku berhasil diperbarui.');
     }
 
     public function destroy(Buku $buku): RedirectResponse
     {
         $buku->delete();
 
-        return redirect()->route('buku.index')->with('success', 'Buku berhasil dihapus.');
+        return redirect()->route('katalog.index')->with('success', 'Buku berhasil dihapus.');
     }
 
     private function validated(Request $request): array
     {
         return $request->validate([
             'kategori_id' => ['required', 'exists:kategori,id'],
-            'lokasi_id' => ['nullable', 'exists:lokasi,id'],
+            'lokasi_id' => ['required', 'exists:lokasi,id'],
             'tipe_koleksi_id' => ['required', 'exists:tipe_koleksi,id'],
-            'judul' => ['required', 'string', 'max:255'],
+            'judul' => ['required', 'string', 'max:200'],
             'penulis' => ['nullable', 'string', 'max:150'],
             'penerbit' => ['nullable', 'string', 'max:150'],
-            'tahun' => ['nullable', 'digits:4'],
-            'isbn' => ['nullable', 'string', 'max:20'],
+            'tahun_terbit' => ['nullable', 'digits:4'],
+            'isbn' => ['nullable', 'string', 'max:50'],
             'stok' => ['required', 'integer', 'min:0'],
         ]);
     }

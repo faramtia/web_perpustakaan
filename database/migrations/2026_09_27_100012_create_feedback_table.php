@@ -8,15 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('feedback', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('jenis', ['keluhan', 'saran', 'tanya_pustakawan'])->default('tanya_pustakawan');
-            $table->text('isi');
-            $table->text('balasan')->nullable();
-            $table->enum('status', ['baru', 'diproses', 'selesai'])->default('baru');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('feedback')) {
+            Schema::create('feedback', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('user_id');
+                $table->string('jenis', 50)->default('tanya_pustakawan');
+                $table->text('isi');
+                $table->text('balasan')->nullable();
+                $table->string('status', 50)->default('baru');
+                $table->primary('id');
+                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void

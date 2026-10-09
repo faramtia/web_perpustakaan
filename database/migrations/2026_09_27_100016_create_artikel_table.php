@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('artikel', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('penulis_id')->constrained('users')->cascadeOnDelete();
-            $table->string('judul', 255);
-            $table->enum('kategori', ['book_review', 'ta_exposure', 'artikel'])->default('artikel');
-            $table->text('konten');
-            $table->date('tanggal_terbit')->useCurrent();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('artikel')) {
+            Schema::create('artikel', function (Blueprint $table) {
+                $table->integer('id', true);
+                $table->integer('user_id');
+                $table->integer('kategori_id');
+                $table->string('judul', 250);
+                $table->text('isi_artikel')->nullable();
+                $table->date('tanggal_upload')->nullable();
+                $table->primary('id');
+                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+                $table->foreign('kategori_id')->references('id')->on('kategori')->cascadeOnDelete()->cascadeOnUpdate();
+            });
+        }
     }
 
     public function down(): void
