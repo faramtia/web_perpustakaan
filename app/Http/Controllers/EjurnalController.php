@@ -13,9 +13,21 @@ class EjurnalController extends Controller
     public function index(Request $request): View
     {
         $ejurnal = Ejurnal::with('kategori')
+<<<<<<< HEAD
             ->when($request->q, fn ($q) => $q->where('judul', 'like', "%{$request->q}%"))
             ->orderBy('id', 'desc')
             ->paginate(10);
+=======
+            ->when(
+                $request->q,
+                fn ($q) => $q
+                    ->where('judul', 'like', "%{$request->q}%")
+                    ->orWhere('penulis', 'like', "%{$request->q}%")
+            )
+            ->orderByDesc('tahun_terbit')
+            ->paginate(10)
+            ->withQueryString();
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 
         return view('ejurnal.index', compact('ejurnal'));
     }
@@ -32,7 +44,12 @@ class EjurnalController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'penulis' => ['nullable', 'string', 'max:150'],
             'abstrak' => ['required', 'string'],
+<<<<<<< HEAD
             'tahun' => ['nullable', 'digits:4'],
+=======
+            'tahun_terbit' => ['nullable', 'digits:4'],
+            'file_jurnal' => ['nullable', 'string', 'max:255'],
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
         ]);
 
         // Form mengirim "tahun", database menyimpan di kolom "tahun_terbit"

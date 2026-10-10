@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\EventPeserta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,12 +23,21 @@ class EventController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'judul' => ['required', 'string', 'max:255'],
+            'judul' => ['required', 'string', 'max:200'],
             'deskripsi' => ['nullable', 'string'],
+<<<<<<< HEAD
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['nullable', 'date'],
+=======
+            'tanggal_mulai' => ['nullable', 'date'],
+            'tanggal_selesai' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
+            'lokasi' => ['nullable', 'string', 'max:100'],
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
             'kuota' => ['required', 'integer', 'min:0'],
         ]);
+
+        // Kolom lokasi di database NOT NULL, jadi kosong disimpan sebagai string kosong.
+        $data['lokasi'] = $data['lokasi'] ?? '';
 
         Event::create($data);
 
@@ -62,8 +72,8 @@ class EventController extends Controller
 
         $event->peserta()->create([
             'user_id' => Auth::id(),
-            'status_pendaftaran' => 'diterima',
-            'tanggal_daftar' => now(),
+            'status_pendaftaran' => EventPeserta::TERDAFTAR,
+            'tanggal_daftar' => today(),
         ]);
 
         return back()->with(

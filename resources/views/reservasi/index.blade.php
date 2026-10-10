@@ -96,6 +96,7 @@
                                 </div>
                             </td>
                         @endif
+<<<<<<< HEAD
 
                         <td class="px-6 py-4 max-w-sm">
                             <div class="flex items-center gap-2 text-stone-700">
@@ -115,6 +116,15 @@
                                 @if ($r->status === 'menunggu')
                                     <form method="POST" action="{{ route('anggota.reservasi.batal', $r) }}"
                                           onsubmit="return confirm('Batalkan reservasi ini?')">
+=======
+                        <td class="px-5 py-3">{{ $r->buku->judul }}</td>
+                        <td class="px-5 py-3">{{ optional($r->tanggal_reservasi)->format('d M Y') }}</td>
+                        <td class="px-5 py-3"><x-status-badge :status="$r->status" /></td>
+                        @if (in_array($role, ['mahasiswa','dosen']))
+                            <td class="px-5 py-3">
+                                @if ($r->status === 'Menunggu')
+                                    <form method="POST" action="{{ route('anggota.reservasi.batal', $r) }}">
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
                                         @csrf
                                         <button class="inline-flex items-center gap-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 px-3.5 py-2 rounded-lg transition">
                                             <i class="bi bi-x-lg"></i> Batalkan

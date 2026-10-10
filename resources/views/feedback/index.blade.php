@@ -25,6 +25,7 @@
         </div>
     @endif
 
+<<<<<<< HEAD
     <div class="space-y-6">
         @forelse ($feedback as $item)
             @php
@@ -33,6 +34,21 @@
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : 'bg-stone-100 text-stone-600 border border-stone-200';
             @endphp
+=======
+    <div class="space-y-4">
+        @forelse ($feedback as $f)
+            <div class="bg-white border rounded-xl p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        @if (in_array($role, ['admin','petugas']))
+                            <span class="font-medium text-gray-700">{{ $f->user->name }}</span>
+                        @endif
+                        <span class="text-xs text-gray-400 capitalize ml-1">({{ str_replace('_', ' ', $f->jenis ?? 'umum') }})</span>
+                    </div>
+                    <x-status-badge :status="$f->status" />
+                </div>
+                <p class="text-sm text-gray-600 mb-3">{{ $f->isi }}</p>
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 
             <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100">

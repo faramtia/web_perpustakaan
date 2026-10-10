@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 @extends('layouts.app')
 @section('title', 'Artikel & Blog Perpustakaan')
+=======
+@extends('layouts.guest')
+@section('title', 'Artikel & Blog')
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 @section('page-title', 'Artikel & Blog')
 
 @section('content')
@@ -16,10 +21,27 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         {{-- Tombol Tulis Artikel --}}
         <a href="{{ url('/artikel/create') }}" class="px-5 py-3 bg-stone-900 hover:bg-stone-800 text-white font-extrabold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-md transform active:scale-95">
             <i class="bi bi-plus-lg text-yellow-400 text-sm"></i> Tulis Artikel Baru
         </a>
+=======
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @forelse ($artikel as $a)
+            <div class="bg-white border rounded-xl overflow-hidden">
+                <div class="h-32 bg-gold-100 flex items-center justify-center text-4xl">📰</div>
+                <div class="p-4">
+                    <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $a->kategori->nama_kategori ?? 'Artikel' }}</p>
+                    <h3 class="font-semibold text-gray-800 mb-1">{{ $a->judul }}</h3>
+                    <p class="text-xs text-gray-400 mb-2">Oleh {{ $a->penulis->name ?? '-' }} &middot; {{ optional($a->tanggal_upload)->format('d M Y') }}</p>
+                    <p class="text-sm text-gray-600 line-clamp-3">{{ $a->isi_artikel }}</p>
+                </div>
+            </div>
+        @empty
+            <p class="text-gray-400 italic col-span-full text-center py-10">Belum ada artikel dipublikasikan.</p>
+        @endforelse
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     </div>
 
     {{-- Notifikasi Berhasil (Jika Ada) --}}

@@ -21,12 +21,19 @@ class ReservasiController extends Controller
             $query->where('user_id', $user->id);
         }
 
+<<<<<<< HEAD
         $reservasi = $query->orderBy('id', 'desc')->paginate(10);
 
         // Hanya tampilkan buku yang stoknya habis/kosong (stok = 0) untuk reservasi
         $bukuKosong = Buku::where('stok', '<=', 0)->orderBy('judul')->get();
 
         return view('reservasi.index', compact('reservasi', 'bukuKosong'));
+=======
+        return view('reservasi.index', [
+            'reservasi' => $query->latest('id')->paginate(10),
+            'bukuHabis' => Buku::where('stok', 0)->orderBy('judul')->get(),
+        ]);
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     }
 
     public function store(Request $request): RedirectResponse
@@ -56,6 +63,10 @@ class ReservasiController extends Controller
             'buku_id' => $buku->id,
             'status' => 'Menunggu',
             'tanggal_reservasi' => today(),
+<<<<<<< HEAD
+=======
+            'status' => Reservasi::MENUNGGU,
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
         ]);
 
         return back()->with('success', 'Reservasi buku berhasil diajukan.');
@@ -63,9 +74,20 @@ class ReservasiController extends Controller
 
     public function batalkan(Reservasi $reservasi): RedirectResponse
     {
+<<<<<<< HEAD
         if ($reservasi->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'petugas'], true)) {
             return back()->with('error', 'Anda tidak memiliki akses untuk membatalkan reservasi ini.');
         }
+=======
+        // Anggota hanya boleh membatalkan reservasi miliknya sendiri.
+        abort_unless($reservasi->user_id === Auth::id(), 403);
+
+        if ($reservasi->status !== Reservasi::MENUNGGU) {
+            return back()->with('error', 'Reservasi ini tidak bisa dibatalkan.');
+        }
+
+        $reservasi->update(['status' => Reservasi::DIBATALKAN]);
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 
         $reservasi->update([
             'status' => 'Dibatalkan',

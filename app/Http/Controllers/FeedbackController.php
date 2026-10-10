@@ -21,9 +21,13 @@ class FeedbackController extends Controller
             $query->where('user_id', $user->id);
         }
 
+<<<<<<< HEAD
         return view('feedback.index', [
             'feedback' => $query->orderBy('id', 'desc')->paginate(10),
         ]);
+=======
+        return view('feedback.index', ['feedback' => $query->latest('id')->paginate(10)]);
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,7 +40,8 @@ class FeedbackController extends Controller
         $feedback = new Feedback([
             ...$data,
             'user_id' => Auth::id(),
-            'status' => 'baru',
+            'tanggal' => today(),
+            'status' => Feedback::BELUM_DIBALAS,
         ]);
         $feedback->timestamps = $this->punyaTimestamps(); // DIUBAH
         $feedback->save();
@@ -54,7 +59,7 @@ class FeedbackController extends Controller
         $feedback->timestamps = $this->punyaTimestamps(); // DIUBAH: tidak error kalau tabel tanpa updated_at
         $feedback->update([
             'balasan' => $request->balasan,
-            'status' => 'selesai',
+            'status' => Feedback::SUDAH_DIBALAS,
         ]);
 
         return back()->with('success', 'Balasan terkirim.');

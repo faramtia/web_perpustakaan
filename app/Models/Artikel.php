@@ -9,17 +9,25 @@ class Artikel extends Model
 {
     protected $table = 'artikel';
 
-    protected $fillable = ['penulis_id', 'judul', 'kategori', 'konten', 'tanggal_terbit'];
+    // Tabel ini tidak punya kolom created_at / updated_at.
+    public $timestamps = false;
+
+    protected $fillable = ['user_id', 'kategori_id', 'judul', 'isi_artikel', 'tanggal_upload'];
 
     protected function casts(): array
     {
         return [
-            'tanggal_terbit' => 'date',
+            'tanggal_upload' => 'date',
         ];
     }
 
     public function penulis(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'penulis_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function kategori(): BelongsTo
+    {
+        return $this->belongsTo(Kategori::class);
     }
 }

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 @section('title', 'E-Jurnal')
 @section('page-title', 'E-Jurnal')
 
@@ -42,6 +42,7 @@
     {{-- Kartu jurnal --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         @forelse ($ejurnal as $j)
+<<<<<<< HEAD
             <article class="bg-white rounded-2xl ring-1 ring-stone-200 shadow-sm p-5 flex flex-col hover:ring-yellow-400 hover:shadow-md transition">
 
                 <div class="flex items-center justify-between gap-2 mb-3">
@@ -58,6 +59,13 @@
 
                 <p class="text-sm text-stone-600 line-clamp-3">{{ $j->abstrak }}</p>
 
+=======
+            <div class="bg-white border rounded-xl p-5">
+                <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $j->kategori->nama_kategori ?? 'Umum' }}</p>
+                <h3 class="font-semibold text-gray-800 mb-1">{{ $j->judul }}</h3>
+                <p class="text-xs text-gray-400 mb-2">{{ $j->penulis }} &middot; {{ $j->tahun_terbit }}</p>
+                <p class="text-sm text-gray-600 line-clamp-3">{{ $j->abstrak }}</p>
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
                 @if ($j->lokasi_rak)
                     <div class="mt-auto pt-4">
                         <div class="flex items-center gap-2 border-t border-stone-100 pt-3 text-xs text-stone-500">

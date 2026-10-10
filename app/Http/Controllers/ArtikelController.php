@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artikel;
+use App\Models\Kategori;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,27 +14,33 @@ class ArtikelController extends Controller
     public function index(): View
     {
         return view('artikel.index', [
+<<<<<<< HEAD
             'artikel' => Artikel::with('penulis')->orderBy('id', 'desc')->paginate(9),
+=======
+            'artikel' => Artikel::with(['penulis', 'kategori'])->orderByDesc('tanggal_upload')->orderByDesc('id')->paginate(9),
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
         ]);
     }
 
     public function create(): View
     {
-        return view('artikel.create');
+        return view('artikel.create', [
+            'kategori' => Kategori::orderBy('nama_kategori')->get(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'judul' => ['required', 'string', 'max:255'],
-            'kategori' => ['required', 'in:book_review,ta_exposure,artikel'],
-            'konten' => ['required', 'string'],
+            'judul' => ['required', 'string', 'max:250'],
+            'kategori_id' => ['required', 'exists:kategori,id'],
+            'isi_artikel' => ['required', 'string'],
         ]);
 
         Artikel::create([
             ...$data,
-            'penulis_id' => Auth::id(),
-            'tanggal_terbit' => today(),
+            'user_id' => Auth::id(),
+            'tanggal_upload' => today(),
         ]);
 
         return redirect()->route('artikel.index')->with('success', 'Artikel dipublikasikan.');

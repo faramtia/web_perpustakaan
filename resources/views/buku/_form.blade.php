@@ -22,7 +22,10 @@
 <div class="grid grid-cols-2 gap-4">
     <div>
         <label class="block text-sm font-medium text-gray-600 mb-1">Tahun</label>
+<<<<<<< HEAD
         {{-- DIUBAH: tahun -> tahun_terbit --}}
+=======
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
         <input type="number" name="tahun_terbit" value="{{ old('tahun_terbit', $b->tahun_terbit ?? '') }}"
                class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
     </div>

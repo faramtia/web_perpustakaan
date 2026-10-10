@@ -15,6 +15,61 @@
                 <p class="text-sm text-stone-500">Periksa, validasi, dan setujui usulan tugas akhir yang diunggah anggota.</p>
             </div>
         </div>
+<<<<<<< HEAD
+=======
+    @endif
+
+    <div class="bg-white rounded-xl border overflow-hidden overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-500 text-left">
+                <tr>
+                    @if (in_array($role, ['admin','petugas']))
+                        <th class="px-5 py-3 font-medium">Mahasiswa/Dosen</th>
+                    @endif
+                    <th class="px-5 py-3 font-medium">Judul</th>
+                    <th class="px-5 py-3 font-medium">Status</th>
+                    <th class="px-5 py-3 font-medium">Catatan</th>
+                    @if (in_array($role, ['admin','petugas']))
+                        <th class="px-5 py-3 font-medium">Aksi</th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @forelse ($tugasAkhir as $ta)
+                    <tr>
+                        @if (in_array($role, ['admin','petugas']))
+                            <td class="px-5 py-3">{{ $ta->user->name }}</td>
+                        @endif
+                        <td class="px-5 py-3">{{ $ta->judul }}</td>
+                        <td class="px-5 py-3"><x-status-badge :status="$ta->status" /></td>
+                        <td class="px-5 py-3 text-gray-500">{{ $ta->catatan_reviewer ?? '-' }}</td>
+                        @if (in_array($role, ['admin','petugas']))
+                            <td class="px-5 py-3">
+                                @if ($ta->status === 'Menunggu')
+                                    <div class="flex gap-2">
+                                        <form method="POST" action="{{ route('petugas.tugas-akhir.review', $ta) }}">
+                                            @csrf
+                                            <input type="hidden" name="keputusan" value="Disetujui">
+                                            <button class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Setujui</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('petugas.tugas-akhir.review', $ta) }}">
+                                            @csrf
+                                            <input type="hidden" name="keputusan" value="Ditolak">
+                                            <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg">Tolak</button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                        @endif
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="px-5 py-6 text-center text-gray-400 italic">Belum ada pengajuan.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     </div>
 
     {{-- Kartu Ringkasan Status --}}

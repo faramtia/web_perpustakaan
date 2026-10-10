@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 @extends('layouts.app')
 @section('title', 'Event & Agenda Perpustakaan')
 @section('page-title', 'Event & Agenda')
+=======
+@extends('layouts.guest')
+@section('title', 'Event Semester')
+@section('page-title', 'Event Semester')
+>>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 
 @section('content')
 

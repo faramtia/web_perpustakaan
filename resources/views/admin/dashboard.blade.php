@@ -32,7 +32,7 @@
                         <td class="px-5 py-3">{{ $p->user->name }} <span class="text-xs text-gray-400 capitalize">({{ $p->user->role }})</span></td>
                         <td class="px-5 py-3">{{ $p->detail->pluck('buku.judul')->join(', ') }}</td>
                         <td class="px-5 py-3">{{ optional($p->tanggal_pinjam)->format('d M Y') ?? '-' }}</td>
-                        <td class="px-5 py-3"><x-status-badge :status="$p->status" /></td>
+                        <td class="px-5 py-3"><x-status-badge :status="$p->status_tampil" /></td>
                     </tr>
                 @empty
                     <tr><td colspan="4" class="px-5 py-6 text-center text-gray-400 italic">Belum ada transaksi.</td></tr>

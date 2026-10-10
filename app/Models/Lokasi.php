@@ -9,7 +9,10 @@ class Lokasi extends Model
 {
     protected $table = 'lokasi';
 
-    protected $fillable = ['nama_ruang'];
+    // Tabel ini tidak punya kolom created_at / updated_at.
+    public $timestamps = false;
+
+    protected $fillable = ['nama_ruang', 'keterangan'];
 
     public function buku(): HasMany
     {

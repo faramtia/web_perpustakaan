@@ -1,56 +1,49 @@
-# Paket Web Perpustakaan PNL (Laravel)
+# Web Perpustakaan PNL (Laravel 12)
 
-Isi zip ini adalah file TAMBAHAN/PENGGANTI untuk project Laravel `web_perpustakaan`
-kalian. Struktur foldernya sama dengan project, jadi tinggal salin & timpa.
+Sumber kebenaran database project ini adalah **file SQL**, bukan migrasi Laravel.
 
-## Cara Pasang
+## Cara Menjalankan
 
-1. Ekstrak zip ini, lalu **salin semua isinya ke root project** (gabungkan/timpa folder
-   `app`, `bootstrap`, `database`, `public`, `resources`, `routes`).
-   - File yang **menimpa** bawaan Laravel: `bootstrap/app.php`, `routes/web.php`,
-     `app/Models/User.php`, `database/seeders/DatabaseSeeder.php`.
-   - Hapus `resources/views/welcome.blade.php` kalau mau (sudah tidak dipakai).
-2. Pastikan `.env` sudah diarahkan ke database MySQL kalian.
-3. Jalankan:
+1. Buat database kosong `web_perpustakaan` di MySQL (Laragon / phpMyAdmin).
+2. Import `database/sql/web_perpustakaan.sql`.
+3. Salin `.env.example` menjadi `.env`, lalu isi `DB_PASSWORD` kalau MySQL kamu memakai password.
+4. Jalankan:
 
 ```
-php artisan migrate:fresh --seed
+composer install
+php artisan key:generate
 php artisan storage:link
 php artisan serve
 ```
 
-4. Buka http://localhost:8000
+5. Buka http://localhost:8000
 
-## Akun Contoh (password semua: `password`)
+> **Jangan jalankan `php artisan migrate:fresh`.** Perintah itu menghapus semua tabel
+> lalu membuat ulang dari migrasi lama, sehingga data dan struktur database ikut hilang.
 
-| Role      | Email               |
-|-----------|---------------------|
-| Admin     | admin@pnl.ac.id     |
-| Petugas   | petugas@pnl.ac.id   |
-| Mahasiswa | mahasiswa@pnl.ac.id |
-| Dosen     | dosen@pnl.ac.id     |
+## Password Akun
 
-## Yang Sudah Jalan
+Password di database harus berupa hash bcrypt. Kalau kamu baru mengimpor data lama
+yang passwordnya masih teks biasa, jalankan sekali:
 
-- Beranda pengunjung umum (gaya Tel-U Open Library, identitas PNL)
-- Login & Sign Up (daftar mandiri hanya Mahasiswa/Dosen)
-- Dashboard beda untuk Admin, Petugas, Mahasiswa, Dosen
-- Katalog & CRUD buku, master kategori/lokasi/tipe koleksi
-- Alur peminjaman: ajukan -> verifikasi -> tandai kembali (denda otomatis Rp2.000/hari)
-- Reservasi, absensi manual, e-jurnal (abstrak), feedback/tanya pustakawan,
-  event + pendaftaran, upload & review tugas akhir, artikel/blog
+```
+php artisan users:hash-passwords
+```
 
-## Belum Ada (tugas lanjutan kelompok)
+## Aturan Peminjaman
 
-- Kelola User oleh admin (buat akun petugas/admin lewat UI)
-- Laporan & grafik (menu Laporan sementara mengarah ke dashboard admin)
-- Absensi via scan QR, notifikasi jatuh tempo, export PDF/Excel
-- Reservasi belum otomatis berubah "tersedia" saat buku dikembalikan
+- Lama pinjam dan tarif denda per hari diatur per role di tabel `jenis_user`
+  (`lama_pinjam_hari`, `denda_per_hari`).
+- Alur status peminjaman: `Menunggu` -> `Dipinjam` -> `Dikembalikan` (atau `Ditolak`).
+- Peminjaman yang sudah lewat jatuh tempo tampil sebagai "Terlambat". Saat buku dikembalikan,
+  denda keterlambatan otomatis dicatat di tabel `denda`.
+
+## Mengubah Struktur Database
+
+Ubah lewat SQL (`ALTER TABLE ...`), lalu export ulang dump ke `database/sql/web_perpustakaan.sql`
+supaya anggota kelompok lain mendapat struktur yang sama.
 
 ## Catatan
 
-- Tailwind memakai CDN (perlu internet saat dibuka di browser). Ganti ke build Vite
-  kalau mau production.
-- Kode belum sempat dijalankan penuh di mesin saya (tidak ada PHP di lingkungan
-  pembuatan), jadi kalau ada error saat `migrate`/`serve`, kirim pesan errornya
-  ke saya dan aku bantu perbaiki.
+- Tailwind memakai CDN, jadi butuh internet saat dibuka di browser.
+- Folder `database/migrations_lama` (kalau ada) hanya arsip dan tidak dipakai.
