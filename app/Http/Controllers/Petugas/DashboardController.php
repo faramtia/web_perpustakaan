@@ -17,7 +17,7 @@ class DashboardController extends Controller
             'feedbackBaru' => Feedback::where('status', 'baru')->count(),
             'antrianPeminjaman' => Peminjaman::with(['user', 'detail.buku'])
                 ->where('status', 'pending')
-                ->latest()
+                ->orderBy('id', 'desc')
                 ->take(5)
                 ->get(),
         ]);

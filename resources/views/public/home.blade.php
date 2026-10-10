@@ -75,11 +75,13 @@
         <div class="bg-white border rounded-xl p-5">
             <h3 class="font-semibold text-gray-700 mb-3">🔥 Koleksi Populer</h3>
             <ul class="space-y-2 text-sm text-gray-600">
-                @forelse ($koleksiPopuler as $buku)
-                    <li class="flex justify-between border-b pb-2">
+                @forelse ($koleksiBaru as $buku)
+                     <li class="flex justify-between border-b pb-2">
                         <span>{{ $buku->judul }}</span>
-                        <span class="text-gray-400">{{ $buku->detail_peminjaman_count }}x dipinjam</span>
-                    </li>
+                        <span class="text-gray-400">
+                            Buku terbaru
+                        </span>
+                     </li>
                 @empty
                     <li class="text-gray-400 italic">Belum ada data peminjaman.</li>
                 @endforelse
@@ -92,7 +94,7 @@
                 @forelse ($koleksiBaru as $buku)
                     <li class="flex justify-between border-b pb-2">
                         <span>{{ $buku->judul }}</span>
-                        <span class="text-gray-400">{{ $buku->created_at->format('d M Y') }}</span>
+                        <span class="text-gray-400">Buku terbaru</span>
                     </li>
                 @empty
                     <li class="text-gray-400 italic">Belum ada koleksi baru.</li>

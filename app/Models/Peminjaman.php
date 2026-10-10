@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Peminjaman extends Model
 {
+    public $timestamps = false;
     protected $table = 'peminjaman';
 
     protected $fillable = [

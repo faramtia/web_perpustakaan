@@ -1,77 +1,43 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Perpustakaan PNL')</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gold: {
-                            50:  '#fdf8e8',
-                            100: '#faf0c8',
-                            400: '#f2c94c',
-                            500: '#e8b923',
-                            600: '#c99a12',
-                            700: '#9c780e',
-                        },
-                    },
-                },
-            },
-        }
-    </script>
-    @stack('styles')
+    <title>@yield('title')</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    @stack('head')
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased">
 
-    <div class="flex min-h-screen">
+<body class="bg-gray-100 text-gray-800">
 
-        @auth
-            @include('partials.sidebar')
-        @endauth
+    {{-- SIDEBAR --}}
+    @include('layouts.sidebar')
 
-        <div class="flex-1 flex flex-col min-w-0">
 
-            @include('partials.navbar')
+    {{-- AREA UTAMA --}}
+    <div class="ml-64">
 
-            <main class="flex-1 p-4 sm:p-6">
+        {{-- NAVBAR --}}
+        @include('layouts.navbar')
 
-                @if (session('success'))
-                    <div class="mb-4 rounded-lg bg-green-100 text-green-700 px-4 py-3 text-sm">
-                        {{ session('success') }}
-                    </div>
-                @endif
 
-                @if (session('error'))
-                    <div class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm">
-                        {{ session('error') }}
-                    </div>
-                @endif
+        <main class="p-6">
 
-                @if ($errors->any())
-                    <div class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+            @yield('content')
 
-                @yield('content')
+        </main>
 
-            </main>
-
-            <footer class="text-center text-xs text-gray-400 py-4 border-t bg-white">
-                &copy; {{ date('Y') }} Perpustakaan Politeknik Negeri Lhokseumawe
-            </footer>
-        </div>
     </div>
 
     @stack('scripts')
 </body>
+
 </html>

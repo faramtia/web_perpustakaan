@@ -7,6 +7,10 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\BukuController;
+use App\Http\Controllers\DendaController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\EjurnalController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FeedbackController;
@@ -22,25 +26,21 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Halaman Publik (Pengunjung Umum) — tidak perlu login
+| Halaman Publik (Pengunjung Umum)
 |--------------------------------------------------------------------------
 */
 Route::get('/', [PublicController::class, 'home'])->name('home');
 
-// Katalog, e-jurnal, artikel, dan daftar event bisa dilihat TANPA login
-// (sesuai rancangan: Pengunjung Umum cuma bisa "lihat", bukan pinjam/daftar).
 Route::get('/katalog', [BukuController::class, 'index'])->name('katalog.index');
 Route::get('/ejurnal', [EjurnalController::class, 'index'])->name('ejurnal.index');
 Route::get('/artikel', [ArtikelController::class, 'index'])->name('artikel.index');
 Route::get('/event', [EventController::class, 'index'])->name('event.index');
+Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
 
 /*
 |--------------------------------------------------------------------------
 | Auth — Login & Register
 |--------------------------------------------------------------------------
-| Pendaftaran mandiri (register) cuma untuk mahasiswa & dosen.
-| Akun admin/petugas dibuat oleh admin lewat menu Kelola User (belum
-| diimplementasi di paket ini — tinggal tambah UserController kalau perlu).
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -55,15 +55,17 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Kelola Buku — boleh Admin & Petugas (sesuai tabel hak akses)
+    | Kelola Buku — Admin & Petugas
     |--------------------------------------------------------------------------
-    | Tetap pakai prefix/nama 'admin.' biar konsisten dengan link yang sudah
-    | dipakai di view (admin.buku.create, dst), walau diakses juga oleh petugas.
     */
     Route::middleware('role:admin,petugas')->prefix('admin')->name('admin.')->group(function () {
-        Route::resource('buku', BukuController::class)->except(['index'])->names([
-            'create' => 'buku.create', 'store' => 'buku.store',
-            'edit' => 'buku.edit', 'update' => 'buku.update', 'destroy' => 'buku.destroy',
+        Route::resource('buku', BukuController::class)->names([
+            'index' => 'buku.index',
+            'create' => 'buku.create', 
+            'store' => 'buku.store',
+            'edit' => 'buku.edit',
+            'update' => 'buku.update',
+            'destroy' => 'buku.destroy',
         ]);
 
         Route::get('/ejurnal/create', [EjurnalController::class, 'create'])->name('ejurnal.create');
@@ -96,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/artikel', [ArtikelController::class, 'store'])->name('artikel.store');
 
         Route::get('/laporan', [AdminDashboardController::class, 'index'])->name('laporan.index');
+        Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
     });
 
     /*
@@ -109,6 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman.index');
         Route::post('/peminjaman/{peminjaman}/verifikasi', [PeminjamanController::class, 'verifikasi'])->name('peminjaman.verifikasi');
         Route::post('/peminjaman/{peminjaman}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
+        Route::redirect('/pengembalian', '/petugas/peminjaman?tampil=belum')->name('pengembalian.index');
 
         Route::get('/reservasi', [ReservasiController::class, 'index'])->name('reservasi.index');
 
@@ -118,10 +122,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
         Route::post('/feedback/{feedback}/balas', [FeedbackController::class, 'balas'])->name('feedback.balas');
 
+        Route::get('/denda', [DendaController::class, 'index'])->name('denda.index');
+        Route::post('/denda/{id}/bayar', [DendaController::class, 'bayar'])->name('petugas.denda.index');
+        
+        Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
+
+        Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+        Route::post('/gallery', [GalleryController::class, 'store'])->name('gallery.store');
+        Route::delete('/gallery', [GalleryController::class, 'destroy'])->name('gallery.destroy');
+
         Route::get('/tugas-akhir', [TugasAkhirController::class, 'index'])->name('tugas-akhir.index');
         Route::post('/tugas-akhir/{tugasAkhir}/review', [TugasAkhirController::class, 'review'])->name('tugas-akhir.review');
 
         Route::get('/event', [EventController::class, 'index'])->name('event.index');
+        Route::get('/event/detail', function () {
+            return view('event.show');
+        });
     });
 
     /*
@@ -144,6 +161,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
         Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+
 
         Route::post('/event/{event}/daftar', [EventController::class, 'daftar'])->name('event.daftar');
 

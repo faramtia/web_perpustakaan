@@ -29,7 +29,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectPathForRole(Auth::user()->role));
+        // DIUBAH: tujuan redirect ditentukan dari nama role (jenis_user.nama_role),
+        // bukan dari angka id yang bisa berbeda di tiap database.
+        $path = $this->redirectPathForRole(Auth::user()->role);
+
+        if ($path === null) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Peran akun tidak dikenali. Cek isi tabel jenis_user dan kolom jenis_user_id di tabel user.',
+            ])->onlyInput('email');
+        }
+
+        return redirect()->intended($path);
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -42,12 +56,13 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route('home');
     }
 
-    private function redirectPathForRole(?string $role): string
+    private function redirectPathForRole(?string $role): ?string
     {
         return match ($role) {
-            'admin'   => route('admin.dashboard'),
-            'petugas' => route('petugas.dashboard'),
-            default   => route('anggota.dashboard'), // mahasiswa & dosen
+            'admin'               => route('admin.dashboard'),
+            'petugas'             => route('petugas.dashboard'),
+            'mahasiswa', 'dosen'  => route('anggota.dashboard'),
+            default               => null,
         };
     }
 }

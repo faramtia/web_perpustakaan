@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Buku extends Model
 {
+    public $timestamps = false; 
     protected $table = 'buku';
 
     protected $fillable = [
         'kategori_id', 'lokasi_id', 'tipe_koleksi_id',
-        'judul', 'penulis', 'penerbit', 'tahun', 'isbn', 'stok', 'cover',
+        'judul', 'penulis', 'penerbit', 'tahun_terbit', 'isbn', 'stok', 'cover',
     ];
 
     public function kategori(): BelongsTo
@@ -42,6 +43,6 @@ class Buku extends Model
 
     public function tersedia(): bool
     {
-        return $this->stok > 0;
+        return $this->jumlah > 0;
     }
 }

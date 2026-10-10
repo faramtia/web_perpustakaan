@@ -21,7 +21,8 @@ class TugasAkhirController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        return view('tugas-akhir.index', ['tugasAkhir' => $query->latest()->paginate(10)]);
+        return view('tugas-akhir.index', ['tugasAkhir' => $query->orderBy('id', 'desc')
+        ->paginate(10)]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,7 +37,7 @@ class TugasAkhirController extends Controller
         TugasAkhir::create([
             'user_id' => Auth::id(),
             'judul' => $request->judul,
-            'file_path' => $path,
+            'file_tugas' => $path,
             'status' => 'diajukan',
         ]);
 
@@ -49,15 +50,15 @@ class TugasAkhirController extends Controller
     public function review(Request $request, TugasAkhir $tugasAkhir): RedirectResponse
     {
         $request->validate([
-            'keputusan' => ['required', 'in:disetujui,ditolak'],
-            'catatan_reviewer' => ['nullable', 'string'],
+        'keputusan' => ['required', 'in:disetujui,ditolak'],
         ]);
 
-        $tugasAkhir->update([
-            'status' => $request->keputusan,
-            'catatan_reviewer' => $request->catatan_reviewer,
-            'reviewer_id' => Auth::id(),
-        ]);
+        $tugasAkhir->update(['status' => $request->keputusan]);
+
+        return back()->with('success', 'Review tersimpan.');
+            
+
+        
 
         return back()->with('success', 'Review tersimpan.');
     }

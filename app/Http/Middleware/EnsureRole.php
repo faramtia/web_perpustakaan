@@ -4,20 +4,24 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRole
 {
-    /**
-     * Contoh pakai di routes:
-     *   Route::middleware('role:admin')->group(...)
-     *   Route::middleware('role:admin,petugas')->group(...)
-     */
-    public function handle(Request $request, Closure $next, string ...$roles): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        $user = $request->user();
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
 
-        if (! $user || ! in_array($user->role, $roles, true)) {
+        $userRole = strtolower(trim(Auth::user()->role ?? ''));
+
+        $allowedRoles = array_map(function ($r) {
+            return strtolower(trim($r));
+        }, $roles);
+
+        if (! in_array($userRole, $allowedRoles, true)) {
             abort(403, 'Kamu tidak punya akses ke halaman ini.');
         }
 

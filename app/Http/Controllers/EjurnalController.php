@@ -14,7 +14,7 @@ class EjurnalController extends Controller
     {
         $ejurnal = Ejurnal::with('kategori')
             ->when($request->q, fn ($q) => $q->where('judul', 'like', "%{$request->q}%"))
-            ->latest()
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('ejurnal.index', compact('ejurnal'));
@@ -33,8 +33,12 @@ class EjurnalController extends Controller
             'penulis' => ['nullable', 'string', 'max:150'],
             'abstrak' => ['required', 'string'],
             'tahun' => ['nullable', 'digits:4'],
-            'lokasi_rak' => ['nullable', 'string', 'max:100'],
         ]);
+
+        // Form mengirim "tahun", database menyimpan di kolom "tahun_terbit"
+        $data['tahun_terbit'] = $data['tahun'] ?? null;
+        unset($data['tahun']);
+        // Catatan: tabel ejurnal tidak punya kolom lokasi_rak, jadi isian itu tidak disimpan
 
         Ejurnal::create($data);
 

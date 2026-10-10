@@ -13,7 +13,7 @@ class ArtikelController extends Controller
     public function index(): View
     {
         return view('artikel.index', [
-            'artikel' => Artikel::with('penulis')->latest('tanggal_terbit')->paginate(9),
+            'artikel' => Artikel::with('penulis')->orderBy('id', 'desc')->paginate(9),
         ]);
     }
 

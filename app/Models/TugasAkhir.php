@@ -9,6 +9,8 @@ class TugasAkhir extends Model
 {
     protected $table = 'tugas_akhir';
 
+    public $timestamps = false;
+
     protected $fillable = ['user_id', 'reviewer_id', 'judul', 'file_path', 'status', 'catatan_reviewer'];
 
     public function user(): BelongsTo

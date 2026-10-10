@@ -21,30 +21,56 @@ class ReservasiController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        return view('reservasi.index', [
-            'reservasi' => $query->latest()->paginate(10),
-            'bukuHabis' => Buku::where('stok', 0)->orderBy('judul')->get(),
-        ]);
+        $reservasi = $query->orderBy('id', 'desc')->paginate(10);
+
+        // Hanya tampilkan buku yang stoknya habis/kosong (stok = 0) untuk reservasi
+        $bukuKosong = Buku::where('stok', '<=', 0)->orderBy('judul')->get();
+
+        return view('reservasi.index', compact('reservasi', 'bukuKosong'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate(['buku_id' => ['required', 'exists:buku,id']]);
+        $request->validate([
+            'buku_id' => ['required', 'exists:buku,id'],
+        ]);
+
+        $buku = Buku::findOrFail($request->buku_id);
+
+        if ($buku->stok > 0) {
+            return back()->with('error', 'Buku ini masih memiliki stok tersedia. Silakan ajukan peminjaman langsung.');
+        }
+
+        // Cek apakah user sudah pernah melakukan reservasi buku yang sama dan masih aktif/menunggu
+        $sudahReservasi = Reservasi::where('user_id', Auth::id())
+            ->where('buku_id', $buku->id)
+            ->whereIn('status', ['menunggu', 'pending', 'aktif'])
+            ->exists();
+
+        if ($sudahReservasi) {
+            return back()->with('error', 'Anda sudah melakukan reservasi untuk buku ini.');
+        }
 
         Reservasi::create([
             'user_id' => Auth::id(),
-            'buku_id' => $request->buku_id,
+            'buku_id' => $buku->id,
+            'status' => 'Menunggu',
             'tanggal_reservasi' => today(),
-            'status' => 'menunggu',
         ]);
 
-        return back()->with('success', 'Reservasi dibuat. Kamu akan diberi tahu saat buku tersedia.');
+        return back()->with('success', 'Reservasi buku berhasil diajukan.');
     }
 
     public function batalkan(Reservasi $reservasi): RedirectResponse
     {
-        $reservasi->update(['status' => 'dibatalkan']);
+        if ($reservasi->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'petugas'], true)) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk membatalkan reservasi ini.');
+        }
 
-        return back()->with('success', 'Reservasi dibatalkan.');
+        $reservasi->update([
+            'status' => 'Dibatalkan',
+        ]);
+
+        return back()->with('success', 'Reservasi berhasil dibatalkan.');
     }
 }

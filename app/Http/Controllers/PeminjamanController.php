@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Buku;
 use App\Models\Peminjaman;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,10 +16,9 @@ class PeminjamanController extends Controller
     private const LAMA_PINJAM_HARI = 7;
     private const DENDA_PER_HARI = 2000;
 
-    /**
-     * Admin/petugas lihat semua transaksi.
-     * Mahasiswa/dosen cuma lihat transaksi miliknya sendiri.
-     */
+    private const STATUS_MENUNGGU = ['pending', 'menunggu', 'diajukan'];
+    private const STATUS_AKTIF = ['aktif', 'dipinjam'];
+
     public function index(Request $request): View
     {
         $user = Auth::user();
@@ -29,7 +29,11 @@ class PeminjamanController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        $peminjaman = $query->latest()->paginate(10);
+        if ($request->tampil === 'belum') {
+            $query->whereIn('status', self::STATUS_AKTIF);
+        }
+
+        $peminjaman = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         return view('peminjaman.index', compact('peminjaman'));
     }
@@ -56,7 +60,7 @@ class PeminjamanController extends Controller
         DB::transaction(function () use ($buku) {
             $peminjaman = Peminjaman::create([
                 'user_id' => Auth::id(),
-                'status' => 'pending',
+                'status' => 'Menunggu',
             ]);
 
             $peminjaman->detail()->create([
@@ -65,26 +69,22 @@ class PeminjamanController extends Controller
             ]);
         });
 
-        return redirect()->route('peminjaman.index')->with('success', 'Pengajuan peminjaman terkirim, menunggu verifikasi petugas.');
+        return redirect()->route('anggota.peminjaman.index')->with('success', 'Pengajuan peminjaman terkirim, menunggu verifikasi petugas.');
     }
 
-    /**
-     * Petugas/admin verifikasi pengajuan: setuju atau tolak.
-     */
     public function verifikasi(Request $request, Peminjaman $peminjaman): RedirectResponse
     {
         $request->validate([
             'keputusan' => ['required', 'in:setuju,tolak'],
         ]);
 
-        if ($peminjaman->status !== 'pending') {
+        if (! in_array(strtolower($peminjaman->status), self::STATUS_MENUNGGU, true)) {
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
         }
 
         if ($request->keputusan === 'tolak') {
             $peminjaman->update([
-                'status' => 'ditolak',
-                'petugas_id' => Auth::id(),
+                'status' => 'Ditolak',
             ]);
 
             return back()->with('success', 'Pengajuan peminjaman ditolak.');
@@ -96,8 +96,7 @@ class PeminjamanController extends Controller
             }
 
             $peminjaman->update([
-                'status' => 'aktif',
-                'petugas_id' => Auth::id(),
+                'status' => 'Dipinjam',
                 'tanggal_pinjam' => today(),
                 'tanggal_jatuh_tempo' => today()->addDays(self::LAMA_PINJAM_HARI),
             ]);
@@ -106,30 +105,19 @@ class PeminjamanController extends Controller
         return back()->with('success', 'Peminjaman disetujui & stok buku diperbarui.');
     }
 
-    /**
-     * Petugas/admin proses pengembalian buku, hitung denda otomatis kalau telat.
-     */
     public function kembalikan(Peminjaman $peminjaman): RedirectResponse
     {
-        if ($peminjaman->status !== 'aktif') {
+        if (! in_array(strtolower($peminjaman->status), self::STATUS_AKTIF, true)) {
             return back()->with('error', 'Transaksi ini tidak sedang aktif dipinjam.');
         }
 
         DB::transaction(function () use ($peminjaman) {
-            $jatuhTempo = $peminjaman->tanggal_jatuh_tempo;
-            $hariTerlambat = today()->gt($jatuhTempo) ? today()->diffInDays($jatuhTempo) : 0;
-            $totalDenda = $hariTerlambat * self::DENDA_PER_HARI;
-
             foreach ($peminjaman->detail as $detail) {
                 $detail->buku()->increment('stok', $detail->jumlah);
-                $detail->update([
-                    'status_kembali' => 'sudah',
-                    'denda' => $totalDenda,
-                ]);
             }
 
             $peminjaman->update([
-                'status' => $hariTerlambat > 0 ? 'terlambat' : 'dikembalikan',
+                'status' => 'Dikembalikan',
                 'tanggal_kembali' => today(),
             ]);
         });

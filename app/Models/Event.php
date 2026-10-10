@@ -21,6 +21,6 @@ class Event extends Model
 
     public function peserta(): HasMany
     {
-        return $this->hasMany(EventPeserta::class);
+        return $this->hasMany(EventPeserta::class, 'events_id');
     }
 }

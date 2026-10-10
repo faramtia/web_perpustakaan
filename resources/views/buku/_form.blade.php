@@ -22,7 +22,8 @@
 <div class="grid grid-cols-2 gap-4">
     <div>
         <label class="block text-sm font-medium text-gray-600 mb-1">Tahun</label>
-        <input type="number" name="tahun" value="{{ old('tahun', $b->tahun ?? '') }}"
+        {{-- DIUBAH: tahun -> tahun_terbit --}}
+        <input type="number" name="tahun_terbit" value="{{ old('tahun_terbit', $b->tahun_terbit ?? '') }}"
                class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
     </div>
     <div>
@@ -62,6 +63,7 @@
 
 <div>
     <label class="block text-sm font-medium text-gray-600 mb-1">Stok</label>
-    <input type="number" name="stok" value="{{ old('stok', $b->stok ?? 0) }}" min="0" required
+    {{-- DIUBAH: stok -> jumlah --}}
+    <input type="number" name="jumlah" value="{{ old('jumlah', $b->jumlah ?? 0) }}" min="0" required
            class="w-full sm:w-40 border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
 </div>

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Absensi extends Model
 {
+    public $timestamps = false; // DIUBAH: tabel absensi tidak punya created_at / updated_at
+
     protected $table = 'absensi';
 
     protected $fillable = ['user_id', 'tanggal', 'waktu_masuk', 'waktu_keluar', 'metode'];

@@ -9,7 +9,10 @@ class Reservasi extends Model
 {
     protected $table = 'reservasi';
 
+    public $timestamps = false;
+
     protected $fillable = ['user_id', 'buku_id', 'tanggal_reservasi', 'status'];
+
 
     protected function casts(): array
     {

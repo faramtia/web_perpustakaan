@@ -6,6 +6,7 @@ use App\Models\Absensi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class AbsensiController extends Controller
@@ -31,15 +32,21 @@ class AbsensiController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', 'exists:user,id'],
         ]);
 
-        Absensi::create([
+        $data = [
             'user_id' => $request->user_id,
             'tanggal' => today(),
             'waktu_masuk' => now()->format('H:i:s'),
-            'metode' => 'manual',
-        ]);
+        ];
+
+        // DIUBAH: kolom metode hanya diisi kalau memang ada di tabel absensi
+        if (Schema::hasColumn('absensi', 'metode')) {
+            $data['metode'] = 'manual';
+        }
+
+        Absensi::create($data);
 
         return back()->with('success', 'Absensi tercatat.');
     }
