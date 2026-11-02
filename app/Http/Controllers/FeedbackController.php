@@ -6,67 +6,68 @@ use App\Models\Feedback;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class FeedbackController extends Controller
 {
-    public function index(): View
+    public const JENIS = [
+        'tanya_pustakawan' => 'Tanya Pustakawan',
+        'saran' => 'Saran',
+        'keluhan' => 'Keluhan',
+    ];
+
+    public function index(Request $request): View
     {
         $user = Auth::user();
 
-        $query = Feedback::with('user');
+        $query = Feedback::with('user.jenisUser');
 
-        if (in_array($user->role, ['mahasiswa', 'dosen'], true)) {
+        if ($user->isAnggota()) {
             $query->where('user_id', $user->id);
         }
 
-<<<<<<< HEAD
+        if (in_array($request->status, [Feedback::BELUM_DIBALAS, Feedback::SUDAH_DIBALAS], true)) {
+            $query->where('status', $request->status);
+        }
+
         return view('feedback.index', [
-            'feedback' => $query->orderBy('id', 'desc')->paginate(10),
+            'feedback' => $query->latest('id')->paginate(10)->withQueryString(),
+            'jenisList' => self::JENIS,
         ]);
-=======
-        return view('feedback.index', ['feedback' => $query->latest('id')->paginate(10)]);
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'jenis' => ['required', 'in:keluhan,saran,tanya_pustakawan'],
-            'isi' => ['required', 'string'],
+            'jenis' => ['required', 'in:'.implode(',', array_keys(self::JENIS))],
+            'isi' => ['required', 'string', 'max:2000'],
+        ], [
+            'jenis.required' => 'Pilih jenis pesan.',
+            'isi.required' => 'Isi pesan wajib diisi.',
         ]);
 
-        $feedback = new Feedback([
+        Feedback::create([
             ...$data,
             'user_id' => Auth::id(),
             'tanggal' => today(),
             'status' => Feedback::BELUM_DIBALAS,
         ]);
-        $feedback->timestamps = $this->punyaTimestamps(); // DIUBAH
-        $feedback->save();
 
         return back()->with('success', 'Terkirim! Petugas akan segera merespons.');
     }
 
-    /**
-     * Petugas/admin balas & ubah status.
-     */
+    /** Petugas/admin membalas & mengubah status. */
     public function balas(Request $request, Feedback $feedback): RedirectResponse
     {
-        $request->validate(['balasan' => ['required', 'string']]);
+        $request->validate(['balasan' => ['required', 'string', 'max:2000']], [
+            'balasan.required' => 'Isi balasan wajib diisi.',
+        ]);
 
-        $feedback->timestamps = $this->punyaTimestamps(); // DIUBAH: tidak error kalau tabel tanpa updated_at
         $feedback->update([
             'balasan' => $request->balasan,
             'status' => Feedback::SUDAH_DIBALAS,
         ]);
 
         return back()->with('success', 'Balasan terkirim.');
-    }
-
-    private function punyaTimestamps(): bool
-    {
-        return Schema::hasColumn('feedback', 'created_at') && Schema::hasColumn('feedback', 'updated_at');
     }
 }

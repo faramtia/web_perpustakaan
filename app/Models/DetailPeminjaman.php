@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DetailPeminjaman extends Model
 {
-    public $timestamps = false;
     protected $table = 'detail_peminjaman';
 
     // Tabel ini tidak punya kolom created_at / updated_at.

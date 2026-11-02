@@ -3,32 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lokasi;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 
-class LokasiController extends Controller
+class LokasiController extends MasterController
 {
-    public function index(): View
+    protected function config(): array
     {
-        return view('master.lokasi', [
-            'items' => Lokasi::withCount('buku')->orderBy('nama_ruang')->get(),
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate(['nama_ruang' => ['required', 'string', 'max:100']]);
-
-        Lokasi::create($request->only('nama_ruang'));
-
-        return back()->with('success', 'Lokasi ditambahkan.');
-    }
-
-    public function destroy(Lokasi $lokasi): RedirectResponse
-    {
-        $lokasi->delete();
-
-        return back()->with('success', 'Lokasi dihapus.');
+        return [
+            'model' => Lokasi::class,
+            'kolom' => 'nama_ruang',
+            'judul' => 'Lokasi Rak',
+            'label' => 'Lokasi',
+            'ikon' => 'bi-geo-alt',
+            'route' => 'admin.lokasi',
+            'deskripsi' => 'Ruang dan rak tempat koleksi disimpan.',
+            'placeholder' => 'mis. Rak A1 Lantai 1',
+            'relasi' => ['buku' => 'buku'],
+        ];
     }
 }

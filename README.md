@@ -1,12 +1,15 @@
 # Web Perpustakaan PNL (Laravel 12)
 
-Sumber kebenaran database project ini adalah **file SQL**, bukan migrasi Laravel.
+Sistem informasi perpustakaan kampus dengan tiga peran: **Admin**, **Petugas**, **Anggota** (Mahasiswa / Dosen).
+Sumber kebenaran database adalah **file SQL**, bukan migrasi Laravel.
 
 ## Cara Menjalankan
 
 1. Buat database kosong `web_perpustakaan` di MySQL (Laragon / phpMyAdmin).
-2. Import `database/sql/web_perpustakaan.sql`.
-3. Salin `.env.example` menjadi `.env`, lalu isi `DB_PASSWORD` kalau MySQL kamu memakai password.
+2. Import `database/sql/web_perpustakaan.sql` (sudah termasuk perubahan struktur terbaru).
+   - Kalau database lama sudah terlanjur dipakai, cukup jalankan `database/sql/perbaikan_sinkron.sql`
+     (aman dijalankan berulang).
+3. Salin `.env.example` menjadi `.env`, isi `DB_PASSWORD` bila perlu. **Jangan commit `.env`.**
 4. Jalankan:
 
 ```
@@ -18,32 +21,37 @@ php artisan serve
 
 5. Buka http://localhost:8000
 
-> **Jangan jalankan `php artisan migrate:fresh`.** Perintah itu menghapus semua tabel
-> lalu membuat ulang dari migrasi lama, sehingga data dan struktur database ikut hilang.
+> **Jangan jalankan `php artisan migrate:fresh`.** Perintah itu menghapus tabel lalu membuat ulang
+> dari migrasi lama, sehingga struktur dan data database ikut hilang.
 
-## Password Akun
+## Akun
 
-Password di database harus berupa hash bcrypt. Kalau kamu baru mengimpor data lama
-yang passwordnya masih teks biasa, jalankan sekali:
+| Role | Login | Password |
+|---|---|---|
+| Admin | admin.pnl@ac.id | (sesuai data lama kelompok) |
+| Petugas | petugas.pnl@ac.id | petugas123 |
+| Dosen | dosen.pnl@ac.id | dosen123 |
 
-```
-php artisan users:hash-passwords
-```
+Akun petugas dan dosen hanyalah contoh untuk pengujian. **Ganti password sebelum dipublikasikan.**
+Password di database harus berupa hash bcrypt.
 
 ## Aturan Peminjaman
 
-- Lama pinjam dan tarif denda per hari diatur per role di tabel `jenis_user`
-  (`lama_pinjam_hari`, `denda_per_hari`).
-- Alur status peminjaman: `Menunggu` -> `Dipinjam` -> `Dikembalikan` (atau `Ditolak`).
-- Peminjaman yang sudah lewat jatuh tempo tampil sebagai "Terlambat". Saat buku dikembalikan,
-  denda keterlambatan otomatis dicatat di tabel `denda`.
+- Lama pinjam dan denda per hari diatur per role di tabel `jenis_user` (menu Admin > Pengaturan).
+- Alur: `Menunggu` -> `Dipinjam` -> `Dikembalikan` (atau `Ditolak`). Dipinjam yang lewat jatuh tempo tampil "Terlambat";
+  denda keterlambatan otomatis dicatat saat buku dikembalikan.
+- Maksimal 3 buku per pengajuan.
+
+## Hak Akses
+
+- **Admin**: seluruh fitur, termasuk master data, pengguna, event, artikel, pengaturan.
+- **Petugas**: buku, e-jurnal, verifikasi peminjaman/pengembalian, reservasi, denda, absensi, feedback, review tugas akhir, galeri, laporan.
+- **Anggota**: ajukan peminjaman, reservasi, lihat denda & absensi, feedback, daftar event, unggah tugas akhir.
 
 ## Mengubah Struktur Database
 
-Ubah lewat SQL (`ALTER TABLE ...`), lalu export ulang dump ke `database/sql/web_perpustakaan.sql`
-supaya anggota kelompok lain mendapat struktur yang sama.
+Ubah lewat SQL (`ALTER TABLE ...`), lalu export ulang dump ke `database/sql/web_perpustakaan.sql`.
 
 ## Catatan
 
-- Tailwind memakai CDN, jadi butuh internet saat dibuka di browser.
-- Folder `database/migrations_lama` (kalau ada) hanya arsip dan tidak dipakai.
+- Tailwind dan Bootstrap Icons memakai CDN, jadi butuh internet saat dibuka di browser.

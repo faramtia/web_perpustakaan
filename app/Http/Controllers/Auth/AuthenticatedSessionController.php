@@ -50,10 +50,9 @@ class AuthenticatedSessionController extends Controller
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-<<<<<<< HEAD
-        // DIUBAH: tujuan redirect ditentukan dari nama role (jenis_user.nama_role),
+        // Tujuan redirect ditentukan dari nama role (jenis_user.nama_role),
         // bukan dari angka id yang bisa berbeda di tiap database.
-        $path = $this->redirectPathForRole(Auth::user()->role);
+        $path = $this->dashboardPath(Auth::user()->role);
 
         if ($path === null) {
             Auth::guard('web')->logout();
@@ -66,12 +65,12 @@ class AuthenticatedSessionController extends Controller
         }
 
         return redirect()->intended($path);
-=======
-        $role = Auth::user()->role;
+    }
 
-        // Kalau user diarahkan dari halaman lain, pastikan halaman itu memang boleh diakses rolenya.
-        return redirect()->intended($this->redirectPathForRole($role));
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
+    /** /dashboard — pintasan ke dashboard sesuai role. */
+    public function dashboard(): RedirectResponse
+    {
+        return redirect($this->dashboardPath(Auth::user()->role) ?? route('home'));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -84,13 +83,13 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route('home');
     }
 
-    private function redirectPathForRole(?string $role): ?string
+    private function dashboardPath(?string $role): ?string
     {
         return match ($role) {
-            'admin'               => route('admin.dashboard'),
-            'petugas'             => route('petugas.dashboard'),
-            'mahasiswa', 'dosen'  => route('anggota.dashboard'),
-            default               => null,
+            'admin' => route('admin.dashboard'),
+            'petugas' => route('petugas.dashboard'),
+            'mahasiswa', 'dosen' => route('anggota.dashboard'),
+            default => null,
         };
     }
 }

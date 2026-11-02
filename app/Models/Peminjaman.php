@@ -8,16 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Peminjaman extends Model
 {
-<<<<<<< HEAD
-    public $timestamps = false;
-=======
     // Nilai status sesuai isi kolom `status` di database.
     public const MENUNGGU = 'Menunggu';         // baru diajukan, belum diverifikasi petugas
     public const DIPINJAM = 'Dipinjam';         // sudah disetujui & sedang dipinjam
     public const DIKEMBALIKAN = 'Dikembalikan';
     public const DITOLAK = 'Ditolak';
 
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     protected $table = 'peminjaman';
 
     // Tabel ini tidak punya kolom created_at / updated_at.
@@ -69,5 +65,14 @@ class Peminjaman extends Model
     public function getStatusTampilAttribute(): string
     {
         return $this->isTerlambat() ? 'Terlambat' : (string) $this->status;
+    }
+
+    /** Judul semua buku dalam transaksi ini, dipisah koma. */
+    public function getJudulBukuAttribute(): string
+    {
+        return $this->detail
+            ->map(fn ($d) => $d->buku->judul ?? null)
+            ->filter()
+            ->join(', ') ?: '-';
     }
 }

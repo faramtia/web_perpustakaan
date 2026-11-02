@@ -81,24 +81,24 @@
 </header>
 
 <div class="flex">
-    <aside id="sidebar" class="w-64 flex-shrink-0 bg-gray-900 text-white fixed lg:sticky top-16 left-0 z-20 h-[calc(100vh-4rem)] overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-200 flex flex-col">
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-blue-900 text-blue-100 fixed lg:sticky top-16 left-0 z-20 h-[calc(100vh-4rem)] overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-200 flex flex-col">
         <nav class="flex-1 p-3 space-y-1 text-sm">
             @foreach ($menu as [$judul, $items])
                 @if ($judul)
-                    <p class="px-3 pt-4 pb-1 text-[11px] font-semibold tracking-wider text-gray-500">{{ $judul }}</p>
+                    <p class="px-3 pt-4 pb-1 text-[11px] font-semibold tracking-wider text-blue-300/70">{{ $judul }}</p>
                 @endif
                 @foreach ($items as [$rn, $label, $ik])
                     @php $aktif = $rn && request()->routeIs($rn) && $label !== 'Pengembalian'; @endphp
                     <a href="{{ $rn ? $go($rn) : '#' }}" @if(!$rn) title="Segera tersedia" @endif
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ $aktif ? 'bg-gold-600 text-white font-semibold shadow' : 'text-gray-300 hover:bg-gray-800' }} {{ $rn ? '' : 'opacity-60' }}">
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ $aktif ? 'bg-gold-500 text-gray-900 font-semibold shadow' : 'text-blue-100 hover:bg-white/10 hover:text-white' }} {{ $rn ? '' : 'opacity-60' }}">
                         {!! $icon($ik) !!}<span>{{ $label }}</span>
                     </a>
                 @endforeach
             @endforeach
         </nav>
-        <div class="p-3 border-t border-gray-700">
-            <a href="#" title="Segera tersedia" class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 border border-gray-700">
-                <span class="flex items-center gap-3">{!! $icon('cog') !!}Pengaturan</span><span class="text-gray-400">›</span>
+        <div class="p-3 border-t border-white/10">
+            <a href="#" title="Segera tersedia" class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-blue-100 hover:bg-white/10 border border-white/15">
+                <span class="flex items-center gap-3">{!! $icon('cog') !!}Pengaturan</span><span class="text-blue-300">›</span>
             </a>
         </div>
     </aside>

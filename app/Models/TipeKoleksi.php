@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipeKoleksi extends Model
 {
+    /** Tipe koleksi karya ilmiah/laporan; tidak ditampilkan di katalog buku. */
+    public const NON_BUKU = [
+        'Skripsi', 'Tugas Akhir', 'Karya Tulis Ilmiah', 'Jurnal Penelitian',
+        'Laporan Penelitian', 'Thesis', 'Disertasi',
+    ];
+
     protected $table = 'tipe_koleksi';
 
     // Tabel ini tidak punya kolom created_at / updated_at.

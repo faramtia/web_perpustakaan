@@ -4,136 +4,142 @@
 
 @section('content')
 
-    <div class="bg-white rounded-2xl border p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Jelajahi Koleksi Kami</h1>
-            <p class="text-sm text-gray-500 mt-1">
-                Temukan <span class="font-semibold text-gold-700">{{ number_format($totalKoleksi, 0, ',', '.') }}</span> koleksi
-                dari <span class="font-semibold text-gold-700">{{ number_format($totalJudul, 0, ',', '.') }}</span> judul
+    {{-- Hero + pencarian --}}
+    <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-yellow-700 p-6 text-white sm:p-10">
+        <div class="relative z-10 max-w-2xl">
+            <img src="{{ asset('images/logo-pnl.png') }}" alt="Logo PNL" class="mb-4 h-12 w-12 rounded-full bg-white object-contain p-1">
+            <h1 class="text-2xl font-extrabold text-yellow-400 sm:text-4xl">Selamat Datang di Open Library PNL</h1>
+            <p class="mt-2 text-sm text-stone-200 sm:text-base">
+                Temukan <span class="font-bold text-yellow-300">{{ number_format($totalKoleksi, 0, ',', '.') }}</span> eksemplar
+                dari <span class="font-bold text-yellow-300">{{ number_format($totalJudul, 0, ',', '.') }}</span> judul buku
+                dan <span class="font-bold text-yellow-300">{{ number_format($totalTugasAkhir, 0, ',', '.') }}</span> tugas akhir.
             </p>
+
+            <form action="{{ route('katalog.index') }}" method="GET" class="mt-5 flex gap-2">
+                <div class="relative flex-1">
+                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                    <input type="text" name="q" placeholder="Judul, penulis, penerbit, ISBN..."
+                           class="w-full rounded-xl border-0 bg-white py-3 pl-11 pr-4 text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                </div>
+                <button type="submit" class="btn btn-primary px-6">Cari</button>
+            </form>
         </div>
+        <div class="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/5"></div>
+        <div class="absolute bottom-[-40px] right-16 h-40 w-40 rounded-full bg-yellow-400/10"></div>
+    </section>
 
-        <form action="{{ route('katalog.index') }}" method="GET" class="flex w-full lg:w-auto gap-2">
-            <input
-                type="text"
-                name="q"
-                placeholder="Judul, penulis, penerbit..."
-                class="w-full lg:w-80 border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400"
-            >
-            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg whitespace-nowrap">
-                🔍 Cari
-            </button>
-        </form>
-    </div>
-
-    <div class="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-r from-gray-900 via-gray-800 to-gold-700 text-white p-6 sm:p-8">
-        <div class="relative z-10 max-w-xl">
-            <img src="{{ asset('images/logo-pnl.png') }}" alt="Logo PNL" class="h-10 w-10 object-contain mb-3 bg-white rounded-full p-1">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-gold-400">Selamat Datang di Open Library PNL</h2>
-            <p class="mt-2 text-sm sm:text-base text-gray-200">
-                Akses katalog, e-jurnal, dan layanan perpustakaan kapan saja. Jangan lewatkan
-                <span class="font-semibold">Event Semester</span> yang akan datang!
-            </p>
-            <a href="{{ route('event.index') }}" class="inline-block mt-4 bg-gold-500 hover:bg-gold-600 text-gray-900 text-sm font-semibold px-5 py-2.5 rounded-full">
-                Lihat Event Semester →
-            </a>
-        </div>
-        <div class="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-white/5"></div>
-        <div class="absolute right-16 bottom-[-40px] w-40 h-40 rounded-full bg-white/5"></div>
-    </div>
-
-    <div id="layanan" class="mb-10">
-        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span class="w-1.5 h-5 bg-gold-500 inline-block rounded"></span>
-            Quick Access Menu
+    {{-- Akses cepat --}}
+    <section id="layanan" class="mb-10">
+        <h2 class="mb-4 flex items-center gap-2 text-lg font-extrabold text-stone-800">
+            <span class="inline-block h-5 w-1.5 rounded bg-yellow-400"></span> Akses Cepat
         </h2>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <a href="{{ route('katalog.index') }}" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">📖</div><div class="text-xs font-medium text-gray-600">Katalog Buku</div>
-            </a>
-            <a href="{{ route('ejurnal.index') }}" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">📰</div><div class="text-xs font-medium text-gray-600">E-Jurnal</div>
-            </a>
-            <a href="{{ route('katalog.index') }}?tipe=e-tga" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">🎓</div><div class="text-xs font-medium text-gray-600">E-TGA</div>
-            </a>
-            <a href="{{ route('event.index') }}" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">📅</div><div class="text-xs font-medium text-gray-600">Event Semester</div>
-            </a>
-            <a href="{{ auth()->check() ? '#' : route('login') }}" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">💬</div><div class="text-xs font-medium text-gray-600">Tanya Pustakawan</div>
-            </a>
-            <a href="{{ route('artikel.index') }}" class="bg-white border rounded-xl p-4 text-center hover:border-gold-400 hover:shadow-sm transition">
-                <div class="text-2xl mb-2">📝</div><div class="text-xs font-medium text-gray-600">Artikel & Blog</div>
-            </a>
+        @php
+            $akses = [
+                ['Katalog Buku', 'bi-book', route('katalog.index')],
+                ['Tugas Akhir', 'bi-mortarboard', route('tugas-akhir.index')],
+                ['Event Semester', 'bi-calendar-event', route('event.index')],
+                ['Tanya Pustakawan', 'bi-chat-dots', auth()->check() && auth()->user()->isAnggota() ? route('anggota.feedback.index') : route('login')],
+                ['Artikel & Blog', 'bi-newspaper', route('artikel.index')],
+            ];
+        @endphp
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            @foreach ($akses as [$label, $ikon, $url])
+                <a href="{{ $url }}" class="card p-4 text-center transition hover:-translate-y-0.5 hover:ring-yellow-400 hover:shadow-md">
+                    <div class="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-xl bg-yellow-100 text-xl text-yellow-700"><i class="bi {{ $ikon }}"></i></div>
+                    <div class="text-xs font-semibold text-stone-700">{{ $label }}</div>
+                </a>
+            @endforeach
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-
-        <div class="bg-white border rounded-xl p-5">
-            <h3 class="font-semibold text-gray-700 mb-3">🔥 Koleksi Populer</h3>
-            <ul class="space-y-2 text-sm text-gray-600">
-                @forelse ($koleksiBaru as $buku)
-                     <li class="flex justify-between border-b pb-2">
-                        <span>{{ $buku->judul }}</span>
-                        <span class="text-gray-400">
-                            Buku terbaru
-                        </span>
-                     </li>
-                @empty
-                    <li class="text-gray-400 italic">Belum ada data peminjaman.</li>
-                @endforelse
-            </ul>
-        </div>
-
-        <div class="bg-white border rounded-xl p-5">
-            <h3 class="font-semibold text-gray-700 mb-3">✨ Koleksi Baru</h3>
-            <ul class="space-y-2 text-sm text-gray-600">
-                @forelse ($koleksiBaru as $buku)
-                    <li class="flex justify-between border-b pb-2">
-                        <span>{{ $buku->judul }}</span>
-<<<<<<< HEAD
-                        <span class="text-gray-400">Buku terbaru</span>
-=======
-                        <span class="text-gray-400">{{ $buku->tahun_terbit }}</span>
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
+    {{-- Koleksi --}}
+    <section class="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="card p-5">
+            <h3 class="mb-3 flex items-center gap-2 font-extrabold text-stone-800"><i class="bi bi-fire text-orange-500"></i> Koleksi Populer</h3>
+            <ul class="divide-y divide-stone-100 text-sm">
+                @forelse ($koleksiPopuler as $b)
+                    <li class="flex items-center justify-between gap-3 py-2.5">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-stone-700">{{ $b->judul }}</p>
+                            <p class="truncate text-xs text-stone-400">{{ $b->penulis }}</p>
+                        </div>
+                        <span class="chip shrink-0 bg-yellow-100 text-yellow-700">{{ $b->detail_peminjaman_count }}× dipinjam</span>
                     </li>
                 @empty
-                    <li class="text-gray-400 italic">Belum ada koleksi baru.</li>
+                    <li class="py-4 italic text-stone-400">Belum ada data peminjaman.</li>
                 @endforelse
             </ul>
         </div>
-    </div>
 
-    <div id="artikel" class="mb-6">
-        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span class="w-1.5 h-5 bg-gold-500 inline-block rounded"></span>
-            Artikel & Berita Terbaru
-        </h2>
+        <div class="card p-5">
+            <h3 class="mb-3 flex items-center gap-2 font-extrabold text-stone-800"><i class="bi bi-stars text-yellow-500"></i> Koleksi Baru</h3>
+            <ul class="divide-y divide-stone-100 text-sm">
+                @forelse ($koleksiBaru as $b)
+                    <li class="flex items-center justify-between gap-3 py-2.5">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-stone-700">{{ $b->judul }}</p>
+                            <p class="truncate text-xs text-stone-400">{{ $b->penulis }}</p>
+                        </div>
+                        <span class="chip shrink-0 bg-stone-100 text-stone-600">{{ $b->kategori->nama_kategori ?? '-' }}</span>
+                    </li>
+                @empty
+                    <li class="py-4 italic text-stone-400">Belum ada koleksi baru.</li>
+                @endforelse
+            </ul>
+        </div>
+    </section>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            @forelse ($artikel as $item)
-                <a href="{{ route('artikel.index') }}" class="bg-white border rounded-xl overflow-hidden hover:shadow-sm transition">
-                    <div class="h-28 bg-gold-100 flex items-center justify-center text-3xl">📰</div>
-                    <div class="p-4">
-                        <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $item->kategori->nama_kategori ?? 'Artikel' }}</p>
-                        <p class="text-sm font-semibold text-gray-700 line-clamp-2">{{ $item->judul }}</p>
+    {{-- Event mendatang --}}
+    <section class="mb-10">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="flex items-center gap-2 text-lg font-extrabold text-stone-800">
+                <span class="inline-block h-5 w-1.5 rounded bg-yellow-400"></span> Event Semester Mendatang
+            </h2>
+            <a href="{{ route('event.index') }}" class="text-sm font-semibold text-yellow-700 hover:underline">Lihat semua →</a>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            @forelse ($eventMendatang as $e)
+                <a href="{{ route('event.show', $e) }}" class="card flex gap-4 p-4 transition hover:ring-yellow-400 hover:shadow-md">
+                    <div class="w-14 shrink-0 rounded-xl bg-yellow-100 py-2 text-center text-yellow-800">
+                        <p class="text-xl font-extrabold leading-none">{{ $e->tanggal_mulai->format('d') }}</p>
+                        <p class="text-xs font-semibold">{{ $e->tanggal_mulai->translatedFormat('M') }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="line-clamp-2 font-bold text-stone-800">{{ $e->judul }}</p>
+                        <p class="mt-1 truncate text-xs text-stone-400"><i class="bi bi-geo-alt"></i> {{ $e->lokasi ?: 'Perpustakaan PNL' }}</p>
                     </div>
                 </a>
             @empty
-                @foreach (['Book Review', 'TA Exposure', 'Artikel'] as $kategori)
-                    <div class="bg-white border rounded-xl overflow-hidden">
-                        <div class="h-28 bg-gold-100 flex items-center justify-center text-3xl">📰</div>
-                        <div class="p-4">
-                            <p class="text-xs text-gold-700 font-medium uppercase mb-1">{{ $kategori }}</p>
-                            <p class="text-sm text-gray-400 italic">Belum ada artikel dipublikasikan.</p>
-                        </div>
-                    </div>
-                @endforeach
+                <div class="card col-span-full px-6 py-8 text-center text-sm italic text-stone-400">Belum ada event mendatang.</div>
             @endforelse
         </div>
-    </div>
+    </section>
+
+    {{-- Artikel --}}
+    <section id="artikel" class="mb-6">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="flex items-center gap-2 text-lg font-extrabold text-stone-800">
+                <span class="inline-block h-5 w-1.5 rounded bg-yellow-400"></span> Artikel &amp; Berita Terbaru
+            </h2>
+            <a href="{{ route('artikel.index') }}" class="text-sm font-semibold text-yellow-700 hover:underline">Lihat semua →</a>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            @forelse ($artikel as $a)
+                <a href="{{ route('artikel.show', $a) }}" class="card overflow-hidden transition hover:ring-yellow-400 hover:shadow-md">
+                    <div class="grid h-28 place-items-center bg-gradient-to-br from-yellow-50 to-amber-100 text-4xl text-yellow-600/70"><i class="bi bi-journal-text"></i></div>
+                    <div class="p-4">
+                        <p class="mb-1 text-xs font-bold uppercase text-yellow-700">{{ $a->kategori->nama_kategori ?? 'Artikel' }}</p>
+                        <p class="line-clamp-2 text-sm font-bold text-stone-800">{{ $a->judul }}</p>
+                        <p class="mt-1 text-xs text-stone-400">{{ optional($a->tanggal_upload)->translatedFormat('d M Y') }}</p>
+                    </div>
+                </a>
+            @empty
+                <div class="card col-span-full px-6 py-8 text-center text-sm italic text-stone-400">Belum ada artikel dipublikasikan.</div>
+            @endforelse
+        </div>
+    </section>
 
 @endsection

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureKiosk;
 use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureRole::class,
+            'kiosk' => EnsureKiosk::class,
         ]);
+
+        // Pengguna yang sudah login dan membuka /login diarahkan ke dashboard sesuai role-nya.
+        $middleware->redirectUsersTo('/dashboard');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

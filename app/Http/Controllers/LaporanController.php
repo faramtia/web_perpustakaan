@@ -4,67 +4,93 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\Buku;
+use App\Models\Denda;
 use App\Models\Peminjaman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 
 class LaporanController extends Controller
 {
-    // Tarif denda per hari keterlambatan (contoh, silakan diubah).
-    private const TARIF_DENDA = 1000;
-
     public function index()
     {
-        return view('laporan.index');
+        return view('laporan.index', [
+            'jumlah' => [
+                'peminjaman' => Peminjaman::count(),
+                'pengunjung' => Absensi::count(),
+                'koleksi' => Buku::count(),
+                'denda' => Denda::count(),
+            ],
+        ]);
     }
 
-    public function peminjaman(Request $request)
+    /** Satu pintu untuk keempat laporan; ?export=csv mengunduh versi CSV. */
+    public function show(Request $request, string $jenis)
     {
-        $query = Peminjaman::with(['user', 'detail.buku'])->orderByDesc('tanggal_pinjam');
-        if ($request->filled('dari')) {
-            $query->whereDate('tanggal_pinjam', '>=', $request->dari);
-        }
-        if ($request->filled('sampai')) {
-            $query->whereDate('tanggal_pinjam', '<=', $request->sampai);
-        }
-        $data = $query->get();
+        $laporan = match ($jenis) {
+            'peminjaman' => $this->peminjaman($request),
+            'pengunjung' => $this->pengunjung($request),
+            'koleksi' => $this->koleksi($request),
+            'denda' => $this->denda($request),
+        };
+        $laporan['jenis'] = $jenis;
 
-        return view('laporan.detail', [
+        if ($request->query('export') === 'csv') {
+            return response()->streamDownload(function () use ($laporan) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF"); // BOM supaya Excel membaca UTF-8 dengan benar
+                fputcsv($out, $laporan['kolom']);
+                foreach ($laporan['baris'] as $baris) {
+                    fputcsv($out, $baris);
+                }
+                fclose($out);
+            }, 'laporan-'.$jenis.'-'.today()->format('Ymd').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
+
+        return view('laporan.detail', $laporan);
+    }
+
+    private function peminjaman(Request $request): array
+    {
+        $data = Peminjaman::with(['user', 'detail.buku'])
+            ->when($request->filled('dari'), fn ($q) => $q->whereDate('tanggal_pinjam', '>=', $request->dari))
+            ->when($request->filled('sampai'), fn ($q) => $q->whereDate('tanggal_pinjam', '<=', $request->sampai))
+            ->orderByDesc('tanggal_pinjam')
+            ->orderByDesc('id')
+            ->get();
+
+        return [
             'judul' => 'Laporan Peminjaman',
             'deskripsi' => 'Riwayat transaksi peminjaman buku.',
             'ikon' => 'bi-box-arrow-up-right',
             'filter' => 'tanggal',
             'ringkasan' => [
                 ['Total Transaksi', $data->count()],
-                ['Sudah Dikembalikan', $data->whereNotNull('tanggal_kembali')->count()],
-                ['Belum Dikembalikan', $data->whereNull('tanggal_kembali')->count()],
+                ['Sudah Dikembalikan', $data->where('status', Peminjaman::DIKEMBALIKAN)->count()],
+                ['Sedang Dipinjam', $data->where('status', Peminjaman::DIPINJAM)->count()],
             ],
             'kolom' => ['Peminjam', 'Buku', 'Tgl Pinjam', 'Jatuh Tempo', 'Tgl Kembali', 'Status'],
             'baris' => $data->map(fn ($p) => [
                 $p->user->nama ?? '-',
-                $p->detail->map(fn ($d) => $d->buku->judul ?? null)->filter()->join(', ') ?: '-',
+                $p->judul_buku,
                 $this->tgl($p->tanggal_pinjam),
                 $this->tgl($p->tanggal_jatuh_tempo),
                 $this->tgl($p->tanggal_kembali),
-                ucfirst((string) $p->status) ?: '-',
+                $p->status_tampil ?: '-',
             ])->all(),
             'catatan' => null,
-        ]);
+        ];
     }
 
-    public function pengunjung(Request $request)
+    private function pengunjung(Request $request): array
     {
-        $query = Absensi::with('user')->orderByDesc('tanggal');
-        if ($request->filled('dari')) {
-            $query->whereDate('tanggal', '>=', $request->dari);
-        }
-        if ($request->filled('sampai')) {
-            $query->whereDate('tanggal', '<=', $request->sampai);
-        }
-        $data = $query->get();
+        $data = Absensi::with('user.jenisUser')
+            ->when($request->filled('dari'), fn ($q) => $q->whereDate('tanggal', '>=', $request->dari))
+            ->when($request->filled('sampai'), fn ($q) => $q->whereDate('tanggal', '<=', $request->sampai))
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->get();
 
-        return view('laporan.detail', [
+        return [
             'judul' => 'Laporan Pengunjung',
             'deskripsi' => 'Kehadiran anggota di perpustakaan (dari data absensi).',
             'ikon' => 'bi-person-lines-fill',
@@ -72,98 +98,81 @@ class LaporanController extends Controller
             'ringkasan' => [
                 ['Total Kunjungan', $data->count()],
                 ['Pengunjung Unik', $data->pluck('user_id')->unique()->count()],
-                ['Kunjungan Hari Ini', $data->filter(fn ($a) => $a->tanggal && Carbon::parse($a->tanggal)->isToday())->count()],
+                ['Kunjungan Hari Ini', $data->filter(fn ($a) => $a->tanggal && $a->tanggal->isToday())->count()],
             ],
-            'kolom' => ['Anggota', 'Peran', 'Tanggal', 'Waktu Masuk', 'Metode'],
+            'kolom' => ['Anggota', 'Peran', 'Tanggal', 'Waktu Masuk'],
             'baris' => $data->map(fn ($a) => [
                 $a->user->nama ?? '-',
                 ucfirst((string) ($a->user->role ?? '')) ?: '-',
                 $this->tgl($a->tanggal),
                 $a->waktu_masuk ? substr($a->waktu_masuk, 0, 5) : '-',
-                ucfirst((string) $a->metode) ?: '-',
             ])->all(),
             'catatan' => null,
-        ]);
+        ];
     }
 
-    public function koleksi(Request $request)
+    private function koleksi(Request $request): array
     {
-        $query = Buku::with(['kategori', 'tipeKoleksi'])->orderBy('judul');
-        if ($request->filled('q')) {
-            $query->where('judul', 'like', '%' . $request->q . '%');
-        }
-        $data = $query->get();
+        $data = Buku::with(['kategori', 'tipeKoleksi', 'lokasi'])
+            ->when($request->filled('q'), fn ($q) => $q->where('judul', 'like', '%'.$request->q.'%'))
+            ->orderBy('judul')
+            ->get();
 
-        // Nama kolom stok bisa "jumlah" atau "stok", tergantung databasenya.
-        $stok = fn ($b) => (int) ($b->jumlah ?? $b->stok ?? 0);
-
-        return view('laporan.detail', [
+        return [
             'judul' => 'Laporan Koleksi Buku',
             'deskripsi' => 'Daftar koleksi buku beserta jumlah eksemplar.',
             'ikon' => 'bi-book',
             'filter' => 'cari',
             'ringkasan' => [
                 ['Total Judul', $data->count()],
-                ['Total Eksemplar', $data->sum($stok)],
-                ['Stok Habis', $data->filter(fn ($b) => $stok($b) === 0)->count()],
+                ['Total Eksemplar', $data->sum('stok')],
+                ['Stok Habis', $data->filter(fn ($b) => (int) $b->stok === 0)->count()],
             ],
-            'kolom' => ['Judul', 'Penulis', 'Kategori', 'Tipe', 'Stok'],
+            'kolom' => ['Judul', 'Penulis', 'Kategori', 'Tipe', 'Lokasi', 'Stok'],
             'baris' => $data->map(fn ($b) => [
                 $b->judul,
                 $b->penulis ?: '-',
                 $b->kategori->nama_kategori ?? '-',
                 $b->tipeKoleksi->nama_tipe ?? '-',
-                $stok($b),
+                $b->lokasi->nama_ruang ?? '-',
+                (int) $b->stok,
             ])->all(),
             'catatan' => null,
-        ]);
+        ];
     }
 
-    public function denda()
+    /** Denda diambil dari tabel `denda` (terlambat, rusak, hilang), bukan dihitung ulang. */
+    private function denda(Request $request): array
     {
-        $ada = Schema::hasColumn('peminjaman', 'tanggal_jatuh_tempo');
-        $terlambat = collect();
+        $data = Denda::with(['peminjaman.user', 'peminjaman.detail.buku'])
+            ->when(in_array($request->status, [Denda::BELUM_LUNAS, Denda::LUNAS], true), fn ($q) => $q->where('status_bayar', $request->status))
+            ->orderByDesc('id')
+            ->get();
 
-        if ($ada) {
-            $terlambat = Peminjaman::with(['user', 'detail.buku'])
-                ->whereNotNull('tanggal_jatuh_tempo')
-                ->get()
-                ->map(function ($p) {
-                    $akhir = $p->tanggal_kembali ?? today();
-                    $hari = max(0, (int) $p->tanggal_jatuh_tempo->diffInDays($akhir, false));
+        $rupiah = fn ($n) => 'Rp '.number_format((int) $n, 0, ',', '.');
 
-                    return ['p' => $p, 'hari' => $hari, 'denda' => $hari * self::TARIF_DENDA];
-                })
-                ->filter(fn ($r) => $r['hari'] > 0)
-                ->values();
-        }
-
-        $rupiah = fn ($n) => 'Rp ' . number_format($n, 0, ',', '.');
-
-        return view('laporan.detail', [
+        return [
             'judul' => 'Laporan Denda',
-            'deskripsi' => 'Denda keterlambatan pengembalian buku.',
+            'deskripsi' => 'Denda keterlambatan, buku rusak, dan buku hilang.',
             'ikon' => 'bi-coin',
-            'filter' => null,
+            'filter' => 'status-denda',
             'ringkasan' => [
-                ['Total Denda', $rupiah($terlambat->sum('denda'))],
-                ['Peminjaman Terlambat', $terlambat->count()],
-                ['Anggota Berdenda', $terlambat->pluck('p.user_id')->unique()->count()],
+                ['Total Denda', $rupiah($data->sum('jumlah_denda'))],
+                ['Belum Lunas', $rupiah($data->where('status_bayar', Denda::BELUM_LUNAS)->sum('jumlah_denda'))],
+                ['Sudah Lunas', $rupiah($data->where('status_bayar', Denda::LUNAS)->sum('jumlah_denda'))],
             ],
-            'kolom' => ['Peminjam', 'Buku', 'Jatuh Tempo', 'Tgl Kembali', 'Terlambat', 'Denda', 'Status'],
-            'baris' => $terlambat->map(fn ($r) => [
-                $r['p']->user->nama ?? '-',
-                $r['p']->detail->map(fn ($d) => $d->buku->judul ?? null)->filter()->join(', ') ?: '-',
-                $this->tgl($r['p']->tanggal_jatuh_tempo),
-                $this->tgl($r['p']->tanggal_kembali),
-                $r['hari'] . ' hari',
-                $rupiah($r['denda']),
-                $r['p']->tanggal_kembali ? 'Sudah kembali' : 'Belum kembali',
+            'kolom' => ['Peminjam', 'Buku', 'Jenis', 'Keterangan', 'Denda', 'Status', 'Tgl Bayar'],
+            'baris' => $data->map(fn ($d) => [
+                $d->peminjaman->user->nama ?? '-',
+                $d->peminjaman?->judul_buku ?? '-',
+                ucfirst($d->jenis),
+                $d->keterangan ?: '-',
+                $rupiah($d->jumlah_denda),
+                $d->status_bayar,
+                $this->tgl($d->tanggal_bayar),
             ])->all(),
-            'catatan' => $ada
-                ? 'Denda dihitung ' . $rupiah(self::TARIF_DENDA) . ' per hari (tarif contoh), dari tanggal jatuh tempo sampai tanggal kembali atau hari ini.'
-                : 'Kolom tanggal_jatuh_tempo tidak ditemukan di tabel peminjaman, jadi denda belum bisa dihitung.',
-        ]);
+            'catatan' => 'Denda keterlambatan dihitung otomatis saat buku dikembalikan: hari terlambat × tarif per hari sesuai role peminjam (diatur di Pengaturan).',
+        ];
     }
 
     private function tgl($nilai): string

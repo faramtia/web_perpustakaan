@@ -18,9 +18,4 @@ class Kategori extends Model
     {
         return $this->hasMany(Buku::class);
     }
-
-    public function ejurnal(): HasMany
-    {
-        return $this->hasMany(Ejurnal::class);
-    }
 }

@@ -1,237 +1,92 @@
 @extends('layouts.app')
-@section('title', 'Transaksi Peminjaman')
-@section('page-title', 'Transaksi Peminjaman')
+@section('title', 'Peminjaman')
 
 @section('content')
+@php
+    $user = auth()->user();
+    $staff = $user->isStaff();
+    $belum = request('tampil') === 'belum';
+@endphp
 
-    @php
-        $role    = auth()->user()->role ?? '';
-        $isStaff = in_array($role, ['admin', 'petugas'], true);
-        $belum   = request('tampil') === 'belum';
+    <x-page-header :icon="$belum ? 'bi-arrow-repeat' : 'bi-box-arrow-up-right'"
+        :title="$belum ? 'Pengembalian Buku' : ($staff ? 'Transaksi Peminjaman' : 'Peminjaman Saya')"
+        :subtitle="$belum ? 'Buku yang masih dipinjam dan belum dikembalikan.' : ($staff ? 'Verifikasi pengajuan dan pantau buku yang sedang dipinjam.' : 'Riwayat dan status peminjamanmu.')">
+        @if (! $staff)
+            <a href="{{ route('anggota.peminjaman.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajukan Peminjaman</a>
+        @endif
+    </x-page-header>
 
-        $statusLabel = [
-            'pending'      => ['Menunggu',     'bg-yellow-100 text-yellow-700'],
-            'menunggu'     => ['Menunggu',     'bg-yellow-100 text-yellow-700'],
-            'aktif'        => ['Dipinjam',     'bg-blue-100 text-blue-700'],
-            'dipinjam'     => ['Dipinjam',     'bg-blue-100 text-blue-700'],
-            'terlambat'    => ['Terlambat',    'bg-red-100 text-red-600'],
-            'dikembalikan' => ['Dikembalikan', 'bg-gray-100 text-gray-600'],
-            'ditolak'      => ['Ditolak',      'bg-red-50 text-red-500'],
-        ];
-    @endphp
-
-    {{-- Judul halaman --}}
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-yellow-400 flex items-center justify-center text-2xl text-white">
-            <i class="bi {{ $belum ? 'bi-arrow-repeat' : 'bi-box-arrow-up-right' }}"></i>
-        </div>
-        <div>
-            <h1 class="text-2xl font-extrabold">{{ $belum ? 'Pengembalian Buku' : 'Transaksi Peminjaman' }}</h1>
-            <p class="text-sm text-gray-500">
-                {{ $belum ? 'Daftar buku yang masih dipinjam dan belum dikembalikan.' : 'Verifikasi pengajuan dan pantau buku yang sedang dipinjam.' }}
-            </p>
-        </div>
-    </div>
-
-    {{-- Pesan sukses / error --}}
-    @if (session('success'))
-        <div class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">
-            {{ session('error') }}
-        </div>
+    @if (! $belum)
+        <x-status-tabs :options="['Menunggu' => 'Menunggu', 'Dipinjam' => 'Dipinjam', 'Terlambat' => 'Terlambat', 'Dikembalikan' => 'Dikembalikan', 'Ditolak' => 'Ditolak']" />
     @endif
 
-    {{-- Tombol ajukan (khusus mahasiswa/dosen) --}}
-    @if (in_array($role, ['mahasiswa', 'dosen'], true))
-        <div class="mb-4">
-            <a href="{{ route('anggota.peminjaman.create') }}"
-               class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
-                <i class="bi bi-plus-lg"></i> Ajukan Peminjaman
-            </a>
-        </div>
+    @if ($staff)
+        <form method="GET" class="mb-4 flex gap-2">
+            @if ($belum)<input type="hidden" name="tampil" value="belum">@endif
+            @if (request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+            <div class="relative w-full max-w-sm">
+                <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama / NIM peminjam..." class="input pl-10">
+            </div>
+            <button class="btn btn-primary">Cari</button>
+        </form>
     @endif
 
-    {{-- Tabel --}}
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="text-gray-600 text-left border-b border-gray-200">
+    <div class="table-wrap">
+        <table class="tbl">
+            <thead>
                 <tr>
-<<<<<<< HEAD
-                    <th class="px-6 py-4 font-semibold">Peminjam</th>
-                    <th class="px-6 py-4 font-semibold">Buku</th>
-                    <th class="px-6 py-4 font-semibold">Tgl Pinjam</th>
-                    <th class="px-6 py-4 font-semibold">Jatuh Tempo</th>
-                    <th class="px-6 py-4 font-semibold">Status</th>
-                    @if ($isStaff)
-                        <th class="px-6 py-4 font-semibold">Aksi</th>
-=======
-                    @if (in_array($role, ['admin','petugas']))
-                        <th class="px-5 py-3 font-medium">Peminjam</th>
-                    @endif
-                    <th class="px-5 py-3 font-medium">Buku</th>
-                    <th class="px-5 py-3 font-medium">Tgl Pinjam</th>
-                    <th class="px-5 py-3 font-medium">Jatuh Tempo</th>
-                    <th class="px-5 py-3 font-medium">Status</th>
-                    <th class="px-5 py-3 font-medium">Denda</th>
-                    @if (in_array($role, ['admin','petugas']))
-                        <th class="px-5 py-3 font-medium">Aksi</th>
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
-                    @endif
+                    @if ($staff)<th>Peminjam</th>@endif
+                    <th>Buku</th><th>Tgl Pinjam</th><th>Jatuh Tempo</th><th>Status</th><th>Denda</th>
+                    @if ($staff)<th class="text-right">Aksi</th>@endif
                 </tr>
             </thead>
-
-            <tbody class="divide-y divide-gray-100">
+            <tbody>
                 @forelse ($peminjaman as $p)
-<<<<<<< HEAD
-                    @php
-                        $nama = $p->user->name ?? $p->user->nama ?? '-';
-                        $inisial = collect(explode(' ', $nama))
-                            ->filter()->take(2)
-                            ->map(fn ($w) => strtoupper(mb_substr($w, 0, 1)))
-                            ->implode('');
-
-                        $judulBuku = $p->detail
-                            ->map(fn ($d) => $d->buku->judul ?? null)
-                            ->filter()
-                            ->implode(', ');
-
-                        $tglPinjam = $p->tanggal_pinjam
-                            ? \Carbon\Carbon::parse($p->tanggal_pinjam)->format('d M Y')
-                            : '-';
-                        $tglTempo = $p->tanggal_jatuh_tempo
-                            ? \Carbon\Carbon::parse($p->tanggal_jatuh_tempo)->format('d M Y')
-                            : '-';
-
-                        $statusKey = strtolower(trim($p->status ?? ''));
-                        [$labelStatus, $kelasStatus] = $statusLabel[$statusKey] ?? [ucfirst($p->status ?? '-'), 'bg-gray-100 text-gray-600'];
-
-                        $menunggu = str_contains($statusKey, 'pending') || str_contains($statusKey, 'tunggu') || str_contains($statusKey, 'ajuk');
-                        $aktif    = ! $menunggu
-                                    && ! str_contains($statusKey, 'kembali')
-                                    && ! str_contains($statusKey, 'tolak')
-                                    && (str_contains($statusKey, 'pinjam') || str_contains($statusKey, 'aktif'));
-                    @endphp
-
-                    <tr class="hover:bg-yellow-50/40">
-                        {{-- Peminjam --}}
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-full bg-yellow-100 text-yellow-700 font-bold flex items-center justify-center text-sm">
-                                    {{ $inisial ?: '?' }}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-800">{{ $nama }}</p>
-                                    <p class="text-xs text-gray-400">{{ ucfirst($p->user->role ?? '') }}</p>
-                                </div>
-                            </div>
-                        </td>
-
-                        {{-- Buku --}}
-                        <td class="px-6 py-4 text-gray-700">
-                            <i class="bi bi-book text-gray-400 mr-1"></i>
-                            {{ $judulBuku !== '' ? $judulBuku : '-' }}
-                        </td>
-
-                        {{-- Tanggal --}}
-                        <td class="px-6 py-4 text-gray-700">{{ $tglPinjam }}</td>
-                        <td class="px-6 py-4 text-gray-700">{{ $tglTempo }}</td>
-
-                        {{-- Status --}}
-                        <td class="px-6 py-4">
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $kelasStatus }}">
-                                {{ $labelStatus }}
-                            </span>
-                        </td>
-
-                        {{-- Aksi (admin & petugas) --}}
-                        @if ($isStaff)
-                            <td class="px-6 py-4">
-                                @if ($menunggu)
-                                    <div class="flex gap-2">
-                                        <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p->id) }}">
-                                            @csrf
-                                            <input type="hidden" name="keputusan" value="setuju">
-                                            <button type="submit"
-                                                    class="text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">
-                                                Setujui
-                                            </button>
-                                        </form>
-
-                                        <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p->id) }}"
-                                              onsubmit="return confirm('Tolak pengajuan ini?')">
-                                            @csrf
-                                            <input type="hidden" name="keputusan" value="tolak">
-                                            <button type="submit"
-                                                    class="text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg">
-                                                Tolak
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                @elseif ($aktif)
-                                    <form method="POST" action="{{ route('petugas.peminjaman.kembalikan', $p->id) }}" onsubmit="return confirm('Tandai buku ini sudah dikembalikan?')">
-                                        @csrf
-                                        <button type="submit" class="text-xs font-medium bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg">
-                                            Kembalikan
-                                        </button>
-=======
+                    @php $totalDenda = $p->denda->sum('jumlah_denda'); @endphp
                     <tr>
-                        @if (in_array($role, ['admin','petugas']))
-                            <td class="px-5 py-3">{{ $p->user->name }} <span class="text-xs text-gray-400 capitalize">({{ $p->user->role }})</span></td>
-                        @endif
-                        <td class="px-5 py-3">{{ $p->detail->pluck('buku.judul')->join(', ') }}</td>
-                        <td class="px-5 py-3">{{ optional($p->tanggal_pinjam)->format('d M Y') ?? '-' }}</td>
-                        <td class="px-5 py-3">{{ optional($p->tanggal_jatuh_tempo)->format('d M Y') ?? '-' }}</td>
-                        <td class="px-5 py-3"><x-status-badge :status="$p->status_tampil" /></td>
-                        <td class="px-5 py-3">
-                            @php $totalDenda = $p->denda->sum('jumlah_denda'); @endphp
-                            {{ $totalDenda > 0 ? 'Rp '.number_format($totalDenda, 0, ',', '.') : '-' }}
+                        @if ($staff)<td><x-user-cell :user="$p->user" /></td>@endif
+                        <td class="max-w-xs">
+                            <i class="bi bi-book mr-1 text-stone-400"></i>{{ $p->judul_buku }}
+                            @if ($p->petugas)<p class="text-xs text-stone-400">Diproses: {{ $p->petugas->nama }}</p>@endif
                         </td>
-                        @if (in_array($role, ['admin','petugas']))
-                            <td class="px-5 py-3 flex gap-2">
-                                @if ($p->status === 'Menunggu')
-                                    <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p) }}">
-                                        @csrf
-                                        <input type="hidden" name="keputusan" value="setuju">
-                                        <button class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Setujui</button>
-                                    </form>
-                                    <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p) }}">
-                                        @csrf
-                                        <input type="hidden" name="keputusan" value="tolak">
-                                        <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg">Tolak</button>
-                                    </form>
-                                @elseif ($p->status === 'Dipinjam')
-                                    <form method="POST" action="{{ route('petugas.peminjaman.kembalikan', $p) }}">
-                                        @csrf
-                                        <button class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg">Tandai Kembali</button>
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
-                                    </form>
-
-                                @else
-                                    <span class="text-gray-300">-</span>
-                                @endif
+                        <td class="whitespace-nowrap">{{ optional($p->tanggal_pinjam)->format('d M Y') ?? '-' }}</td>
+                        <td class="whitespace-nowrap">
+                            {{ optional($p->tanggal_jatuh_tempo)->format('d M Y') ?? '-' }}
+                            @if ($p->tanggal_kembali)<p class="text-xs text-stone-400">Kembali {{ $p->tanggal_kembali->format('d M Y') }}</p>@endif
+                        </td>
+                        <td><x-status-badge :status="$p->status_tampil" /></td>
+                        <td class="whitespace-nowrap">{{ $totalDenda > 0 ? 'Rp '.number_format($totalDenda, 0, ',', '.') : '-' }}</td>
+                        @if ($staff)
+                            <td>
+                                <div class="flex justify-end gap-2">
+                                    @if ($p->status === 'Menunggu')
+                                        <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p) }}">
+                                            @csrf <input type="hidden" name="keputusan" value="setuju">
+                                            <button class="btn btn-sm btn-success">Setujui</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('petugas.peminjaman.verifikasi', $p) }}" onsubmit="return confirm('Tolak pengajuan ini?')">
+                                            @csrf <input type="hidden" name="keputusan" value="tolak">
+                                            <button class="btn btn-sm btn-danger">Tolak</button>
+                                        </form>
+                                    @elseif ($p->status === 'Dipinjam')
+                                        <form method="POST" action="{{ route('petugas.peminjaman.kembalikan', $p) }}" onsubmit="return confirm('Tandai buku ini sudah dikembalikan?')">
+                                            @csrf
+                                            <button class="btn btn-sm btn-dark"><i class="bi bi-arrow-return-left"></i> Tandai Kembali</button>
+                                        </form>
+                                    @else
+                                        <span class="text-stone-300">-</span>
+                                    @endif
+                                </div>
                             </td>
                         @endif
                     </tr>
                 @empty
-<<<<<<< HEAD
-                    <tr>
-                        <td colspan="{{ $isStaff ? 6 : 5 }}" class="px-6 py-10 text-center text-gray-400 italic">
-                            Belum ada data peminjaman.
-                        </td>
-                    </tr>
-=======
-                    <tr><td colspan="7" class="px-5 py-6 text-center text-gray-400 italic">Belum ada transaksi.</td></tr>
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
+                    <x-empty-state :cols="$staff ? 7 : 5" icon="bi-box-arrow-up-right" title="Belum ada transaksi" />
                 @endforelse
             </tbody>
         </table>
     </div>
 
     <div class="mt-4">{{ $peminjaman->links() }}</div>
-
 @endsection

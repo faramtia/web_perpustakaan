@@ -12,7 +12,7 @@
         </p>
 
         @if (auth()->user()->role === 'dosen')
-            <p class="text-xs text-gray-200 mt-2">Sebagai dosen, kamu juga bisa membimbing pengajuan Tugas Akhir mahasiswa di menu terkait.</p>
+            <p class="text-xs text-gray-200 mt-2">Telusuri E-Publication (e-jurnal dan tugas akhir) di menu samping.</p>
         @else
             <p class="text-xs text-gray-200 mt-2">Jangan lupa cek jatuh tempo peminjaman kamu supaya tidak kena denda.</p>
         @endif
@@ -53,17 +53,17 @@
 
         <div class="bg-white border rounded-xl p-5 lg:col-span-2">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="font-semibold text-gray-700">🎓 {{ auth()->user()->role === 'dosen' ? 'Tugas Akhir Bimbingan' : 'Tugas Akhir Saya' }}</h3>
-                <a href="{{ route('anggota.tugas-akhir.index') }}" class="text-xs text-gold-700 hover:underline">Lihat semua</a>
+                <h3 class="font-semibold text-gray-700">📚 E-Publication Terbaru</h3>
+                <a href="{{ route('epublication.index') }}" class="text-xs text-gold-700 hover:underline">Lihat semua</a>
             </div>
             <ul class="space-y-2 text-sm text-gray-600">
-                @forelse ($tugasAkhirSaya as $ta)
+                @forelse ($publikasiTerbaru as $pub)
                     <li class="flex justify-between border-b pb-2">
-                        <span>{{ $ta->judul }}</span>
-                        <x-status-badge :status="$ta->status" />
+                        <span>{{ $pub['judul'] }}</span>
+                        <span class="text-gray-400">{{ $pub['jenis'] }}</span>
                     </li>
                 @empty
-                    <li class="text-gray-400 italic">Belum ada pengajuan tugas akhir.</li>
+                    <li class="text-gray-400 italic">Belum ada e-publication.</li>
                 @endforelse
             </ul>
         </div>

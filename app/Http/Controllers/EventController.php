@@ -11,13 +11,35 @@ use Illuminate\View\View;
 
 class EventController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $event = Event::withCount('peserta')
-            ->orderBy('tanggal_mulai', 'asc')
-            ->paginate(10);
+            ->when($request->waktu === 'lalu', fn ($q) => $q->whereDate('tanggal_mulai', '<', today())->orderByDesc('tanggal_mulai'))
+            ->when($request->waktu !== 'lalu', fn ($q) => $q->whereDate('tanggal_mulai', '>=', today())->orderBy('tanggal_mulai'))
+            ->paginate(9)
+            ->withQueryString();
 
-        return view('event.index', compact('event'));
+        return view('event.index', [
+            'event' => $event,
+            'terdaftar' => Auth::check()
+                ? EventPeserta::where('user_id', Auth::id())->pluck('events_id')->all()
+                : [],
+        ]);
+    }
+
+    public function show(Event $event): View
+    {
+        $event->loadCount('peserta');
+
+        $user = Auth::user();
+
+        return view('event.show', [
+            'event' => $event,
+            'sudahDaftar' => $user ? $event->peserta()->where('user_id', $user->id)->exists() : false,
+            'peserta' => $user && $user->isStaff()
+                ? $event->peserta()->with('user.jenisUser')->get()
+                : collect(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -25,49 +47,42 @@ class EventController extends Controller
         $data = $request->validate([
             'judul' => ['required', 'string', 'max:200'],
             'deskripsi' => ['nullable', 'string'],
-<<<<<<< HEAD
             'tanggal_mulai' => ['required', 'date'],
-            'tanggal_selesai' => ['nullable', 'date'],
-=======
-            'tanggal_mulai' => ['nullable', 'date'],
             'tanggal_selesai' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
-            'lokasi' => ['nullable', 'string', 'max:100'],
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
-            'kuota' => ['required', 'integer', 'min:0'],
+            'lokasi' => ['required', 'string', 'max:100'],
+            'kuota' => ['nullable', 'integer', 'min:0'],
+        ], [
+            'judul.required' => 'Judul event wajib diisi.',
+            'tanggal_mulai.required' => 'Tanggal mulai wajib diisi.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+            'lokasi.required' => 'Lokasi event wajib diisi.',
         ]);
-
-        // Kolom lokasi di database NOT NULL, jadi kosong disimpan sebagai string kosong.
-        $data['lokasi'] = $data['lokasi'] ?? '';
 
         Event::create($data);
 
-        return back()->with('success', 'Event berhasil ditambahkan.');
+        return redirect()->route('event.index')->with('success', 'Event berhasil ditambahkan.');
     }
 
-    /**
-     * Anggota mendaftar ke event.
-     */
+    public function destroy(Event $event): RedirectResponse
+    {
+        $event->delete();
+
+        return redirect()->route('event.index')->with('success', 'Event dihapus.');
+    }
+
+    /** Anggota mendaftar ke event. Kuota kosong / 0 berarti tanpa batas. */
     public function daftar(Event $event): RedirectResponse
     {
-        $sudahTerdaftar = $event->peserta()
-            ->where('user_id', Auth::id())
-            ->exists();
-
-        if ($sudahTerdaftar) {
-            return back()->with(
-                'error',
-                'Kamu sudah terdaftar di event ini.'
-            );
+        if ($event->tanggal_selesai ? $event->tanggal_selesai->lt(today()) : $event->tanggal_mulai?->lt(today())) {
+            return back()->with('error', 'Event ini sudah berlalu.');
         }
 
-        if (
-            $event->kuota > 0 &&
-            $event->peserta()->count() >= $event->kuota
-        ) {
-            return back()->with(
-                'error',
-                'Kuota event sudah penuh.'
-            );
+        if ($event->peserta()->where('user_id', Auth::id())->exists()) {
+            return back()->with('error', 'Kamu sudah terdaftar di event ini.');
+        }
+
+        if ($event->kuota > 0 && $event->peserta()->count() >= $event->kuota) {
+            return back()->with('error', 'Kuota event sudah penuh.');
         }
 
         $event->peserta()->create([
@@ -76,9 +91,6 @@ class EventController extends Controller
             'tanggal_daftar' => today(),
         ]);
 
-        return back()->with(
-            'success',
-            'Berhasil daftar event!'
-        );
+        return back()->with('success', 'Berhasil mendaftar event!');
     }
 }

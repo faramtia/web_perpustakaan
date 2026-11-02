@@ -1,236 +1,54 @@
-<<<<<<< HEAD
-@extends('layouts.app')
-@section('title', 'Event & Agenda Perpustakaan')
-@section('page-title', 'Event & Agenda')
-=======
-@extends('layouts.guest')
-@section('title', 'Event Semester')
-@section('page-title', 'Event Semester')
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
+@extends(auth()->check() ? 'layouts.app' : 'layouts.guest')
+@section('title', 'Event & Agenda')
 
 @section('content')
+@php $admin = auth()->user()?->isAdmin(); $lalu = request('waktu') === 'lalu'; @endphp
 
-    {{-- Header Event & Tombol Aksi --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-yellow-400 text-stone-900 grid place-items-center text-xl font-bold shadow-sm">
-                <i class="bi bi-calendar-event-fill"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-extrabold leading-tight text-stone-900">Event & Agenda</h1>
-                <p class="text-sm text-stone-500">Jadwal seminar, workshop, dan pelatihan literasi di perpustakaan.</p>
-            </div>
-        </div>
+    <x-page-header icon="bi-calendar-event" title="Event Semester" subtitle="Seminar, workshop, dan pelatihan literasi di perpustakaan.">
+        <a href="{{ route('event.index') }}" class="btn btn-sm {{ $lalu ? 'btn-soft' : 'btn-dark' }}">Mendatang</a>
+        <a href="{{ route('event.index', ['waktu' => 'lalu']) }}" class="btn btn-sm {{ $lalu ? 'btn-dark' : 'btn-soft' }}">Sudah berlalu</a>
+    </x-page-header>
 
-        {{-- Tombol Tambah Event --}}
-        <a href="{{ url('/event/create') }}" class="px-5 py-3 bg-stone-900 hover:bg-stone-800 text-white font-extrabold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-md transform active:scale-95">
-            <i class="bi bi-plus-lg text-yellow-400 text-sm"></i> Tambah Event Baru
-        </a>
-    </div>
-
-    {{-- Notifikasi Berhasil (Jika Ada) --}}
-    @if (session('success'))
-        <div class="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-2xl px-5 py-3.5 mb-6 text-sm flex items-center gap-3 shadow-sm">
-            <i class="bi bi-check-circle-fill text-lg"></i>
-            <span class="font-medium">{{ session('success') }}</span>
-        </div>
+    @if ($admin)
+        <details class="card mb-6 p-5" @if ($errors->any()) open @endif>
+            <summary class="cursor-pointer font-bold text-stone-800"><i class="bi bi-plus-circle mr-1 text-yellow-600"></i> Tambah event baru</summary>
+            <form method="POST" action="{{ route('admin.event.store') }}" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                @csrf
+                <div class="md:col-span-2"><label class="label">Judul</label><input type="text" name="judul" value="{{ old('judul') }}" required maxlength="200" class="input"></div>
+                <div><label class="label">Tanggal mulai</label><input type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}" required class="input"></div>
+                <div><label class="label">Tanggal selesai (opsional)</label><input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}" class="input"></div>
+                <div><label class="label">Lokasi</label><input type="text" name="lokasi" value="{{ old('lokasi') }}" required maxlength="100" class="input"></div>
+                <div><label class="label">Kuota (kosong = tanpa batas)</label><input type="number" name="kuota" value="{{ old('kuota') }}" min="0" class="input"></div>
+                <div class="md:col-span-2"><label class="label">Deskripsi</label><textarea name="deskripsi" rows="3" class="input">{{ old('deskripsi') }}</textarea></div>
+                <div class="md:col-span-2"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Event</button></div>
+            </form>
+        </details>
     @endif
 
-    {{-- Grid Daftar Event --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {{-- Item Event 1 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 10 Sep 2026
-                    </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #1
-                    </span>
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        @forelse ($event as $e)
+            @php $penuh = $e->kuota > 0 && $e->peserta_count >= $e->kuota; @endphp
+            <div class="card flex flex-col justify-between p-5 transition hover:shadow-md">
+                <div>
+                    <div class="mb-3 flex items-center justify-between">
+                        <span class="chip bg-yellow-100 text-yellow-800"><i class="bi bi-calendar3 mr-1"></i>{{ $e->tanggal_mulai?->translatedFormat('d M Y') ?? '-' }}</span>
+                        @if (in_array($e->id, $terdaftar))<x-status-badge status="Terdaftar" />@endif
+                    </div>
+                    <a href="{{ route('event.show', $e) }}" class="line-clamp-2 text-base font-extrabold text-stone-900 hover:text-yellow-700">{{ $e->judul }}</a>
+                    <p class="mt-1 text-xs text-stone-400"><i class="bi bi-geo-alt"></i> {{ $e->lokasi ?: 'Perpustakaan PNL' }}</p>
+                    @if ($e->deskripsi)<p class="mt-2 line-clamp-2 text-xs text-stone-500">{{ $e->deskripsi }}</p>@endif
                 </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Seminar Literasi Digital Mahasiswa
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Meningkatkan pemahaman sivitas akademika dalam menyaring informasi valid di era internet.
-                </p>
-            </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/100 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Item Event 2 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 15 Sep 2026
+                <div class="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
+                    <span class="text-xs font-bold text-stone-600"><i class="bi bi-people-fill mr-1 text-yellow-600"></i>
+                        {{ $e->peserta_count }}{{ $e->kuota > 0 ? '/'.$e->kuota : '' }} peserta @if ($penuh)<span class="text-red-500">· penuh</span>@endif
                     </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #2
-                    </span>
+                    <a href="{{ route('event.show', $e) }}" class="text-xs font-bold text-stone-900 hover:text-yellow-700">Detail <i class="bi bi-arrow-right"></i></a>
                 </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Pelatihan Penggunaan Perpustakaan Digital
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Panduan praktis memaksimalkan akses e-book dan jurnal online perpustakaan kampus.
-                </p>
             </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/50 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Item Event 3 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 20 Sep 2026
-                    </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #3
-                    </span>
-                </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Workshop Penulisan Karya Ilmiah
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Strategi jitu menyusun karya tulis ilmiah yang memenuhi standar publikasi nasional.
-                </p>
-            </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/75 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Item Event 4 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 25 Sep 2026
-                    </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #4
-                    </span>
-                </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Sosialisasi Repository Tugas Akhir Mahasiswa
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Tata cara pengumpulan mandiri arsip skripsi dan tugas akhir ke sistem repository.
-                </p>
-            </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/100 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Item Event 5 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 01 Okt 2026
-                    </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #5
-                    </span>
-                </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Pelatihan Mencari Referensi Jurnal Nasional & Internasional
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Teknik penelusuran literatur ilmiah menggunakan database bereputasi tinggi.
-                </p>
-            </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/60 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Item Event 6 --}}
-        <div class="bg-white rounded-3xl p-6 border border-stone-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-yellow-50 text-yellow-800 border border-yellow-200/60 flex items-center gap-1.5">
-                        <i class="bi bi-calendar3"></i> 05 Okt 2026
-                    </span>
-                    <span class="w-8 h-8 rounded-xl bg-stone-50 group-hover:bg-yellow-50 text-stone-600 group-hover:text-yellow-700 grid place-items-center transition text-xs font-bold">
-                        #6
-                    </span>
-                </div>
-
-                <h3 class="text-base font-extrabold text-stone-900 group-hover:text-yellow-600 transition mb-3 line-clamp-2">
-                    Seminar Manajemen Referensi Menggunakan Mendeley
-                </h3>
-
-                <p class="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">
-                    Praktik langsung pengelolaan sitasi dan bibliografi otomatis anti ribet.
-                </p>
-            </div>
-
-            <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-                    <i class="bi bi-people-fill text-yellow-600"></i> 2/80 peserta
-                </span>
-                <a href="{{ url('/event/detail') }}" class="text-xs font-extrabold text-stone-900 hover:text-yellow-600 flex items-center gap-1 transition">
-                    <span>Detail</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
+        @empty
+            <div class="col-span-full"><x-empty-state icon="bi-calendar-x" :title="$lalu ? 'Belum ada event yang berlalu' : 'Belum ada event mendatang'" /></div>
+        @endforelse
     </div>
 
+    <div class="mt-6">{{ $event->links() }}</div>
 @endsection

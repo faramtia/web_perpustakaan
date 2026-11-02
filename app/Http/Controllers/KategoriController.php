@@ -3,32 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kategori;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 
-class KategoriController extends Controller
+class KategoriController extends MasterController
 {
-    public function index(): View
+    protected function config(): array
     {
-        return view('master.kategori', [
-            'items' => Kategori::withCount('buku')->orderBy('nama_kategori')->get(),
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate(['nama_kategori' => ['required', 'string', 'max:150']]);
-
-        Kategori::create($request->only('nama_kategori'));
-
-        return back()->with('success', 'Kategori ditambahkan.');
-    }
-
-    public function destroy(Kategori $kategori): RedirectResponse
-    {
-        $kategori->delete();
-
-        return back()->with('success', 'Kategori dihapus.');
+        return [
+            'model' => Kategori::class,
+            'kolom' => 'nama_kategori',
+            'judul' => 'Kategori Buku',
+            'label' => 'Kategori',
+            'ikon' => 'bi-grid',
+            'route' => 'admin.kategori',
+            'deskripsi' => 'Pengelompokan subjek untuk buku dan artikel.',
+            'placeholder' => 'mis. Teknologi',
+            'relasi' => ['buku' => 'buku'],
+        ];
     }
 }

@@ -1,26 +1,17 @@
 @extends('layouts.app')
 @section('title', 'Tambah Buku')
-@section('page-title', 'Tambah Buku')
 
 @section('content')
+    <x-page-header icon="bi-journal-plus" title="Tambah Buku" subtitle="Isi data buku baru." />
 
-    @if ($errors->any())
-        <div class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 max-w-2xl text-sm">
-            <ul class="list-disc pl-5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('admin.buku.store') }}" class="bg-white border rounded-xl p-6 max-w-2xl space-y-4">
+    <form method="POST" action="{{ route('admin.buku.store') }}" class="card max-w-3xl space-y-4 p-6">
         @csrf
+        
         @include('buku._form')
 
-        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
-            Simpan Buku
-        </button>
+        <div class="flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Simpan Buku</button>
+            <a href="{{ route('admin.buku.index') }}" class="btn btn-soft">Batal</a>
+        </div>
     </form>
-
 @endsection

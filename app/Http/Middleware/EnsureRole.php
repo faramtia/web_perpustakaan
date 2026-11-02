@@ -16,10 +16,7 @@ class EnsureRole
         }
 
         $userRole = strtolower(trim(Auth::user()->role ?? ''));
-
-        $allowedRoles = array_map(function ($r) {
-            return strtolower(trim($r));
-        }, $roles);
+        $allowedRoles = array_map(fn ($r) => strtolower(trim($r)), $roles);
 
         if (! in_array($userRole, $allowedRoles, true)) {
             abort(403, 'Kamu tidak punya akses ke halaman ini.');

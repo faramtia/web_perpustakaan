@@ -11,75 +11,77 @@ use Illuminate\View\View;
 
 class ReservasiController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = Auth::user();
 
-        $query = Reservasi::with(['user', 'buku']);
+        $query = Reservasi::with(['user.jenisUser', 'buku']);
 
-        if (in_array($user->role, ['mahasiswa', 'dosen'], true)) {
+        if ($user->isAnggota()) {
             $query->where('user_id', $user->id);
         }
 
-<<<<<<< HEAD
-        $reservasi = $query->orderBy('id', 'desc')->paginate(10);
+        if (in_array($request->status, [Reservasi::MENUNGGU, Reservasi::DIPROSES, Reservasi::SELESAI, Reservasi::DIBATALKAN], true)) {
+            $query->where('status', $request->status);
+        }
 
-        // Hanya tampilkan buku yang stoknya habis/kosong (stok = 0) untuk reservasi
-        $bukuKosong = Buku::where('stok', '<=', 0)->orderBy('judul')->get();
+        // Petugas/admin dapat mencari berdasarkan nama/NIM-NIP anggota atau judul buku.
+        if ($user->isStaff() && $request->filled('q')) {
+            $q = trim($request->q);
+            $query->where(function ($w) use ($q) {
+                $w->whereHas('user', fn ($u) => $u->where('nama', 'like', "%{$q}%")->orWhere('nim_nip', 'like', "%{$q}%"))
+                    ->orWhereHas('buku', fn ($b) => $b->where('judul', 'like', "%{$q}%"));
+            });
+        }
 
-        return view('reservasi.index', compact('reservasi', 'bukuKosong'));
-=======
+        $ringkasan = $user->isStaff()
+            ? Reservasi::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status')
+            : collect();
+
         return view('reservasi.index', [
-            'reservasi' => $query->latest('id')->paginate(10),
-            'bukuHabis' => Buku::where('stok', 0)->orderBy('judul')->get(),
+            'ringkasan' => $ringkasan,
+            'reservasi' => $query->latest('id')->paginate(10)->withQueryString(),
+            // Reservasi hanya untuk buku yang stoknya habis.
+            'bukuHabis' => $user->isAnggota() ? Buku::where('stok', '<=', 0)->orderBy('judul')->get() : collect(),
         ]);
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     }
 
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'buku_id' => ['required', 'exists:buku,id'],
+        ], [
+            'buku_id.required' => 'Pilih buku yang ingin direservasi.',
         ]);
 
         $buku = Buku::findOrFail($request->buku_id);
 
-        if ($buku->stok > 0) {
+        if ($buku->tersedia()) {
             return back()->with('error', 'Buku ini masih memiliki stok tersedia. Silakan ajukan peminjaman langsung.');
         }
 
-        // Cek apakah user sudah pernah melakukan reservasi buku yang sama dan masih aktif/menunggu
         $sudahReservasi = Reservasi::where('user_id', Auth::id())
             ->where('buku_id', $buku->id)
-            ->whereIn('status', ['menunggu', 'pending', 'aktif'])
+            ->whereIn('status', [Reservasi::MENUNGGU, Reservasi::DIPROSES])
             ->exists();
 
         if ($sudahReservasi) {
-            return back()->with('error', 'Anda sudah melakukan reservasi untuk buku ini.');
+            return back()->with('error', 'Kamu sudah mereservasi buku ini.');
         }
 
         Reservasi::create([
             'user_id' => Auth::id(),
             'buku_id' => $buku->id,
-            'status' => 'Menunggu',
             'tanggal_reservasi' => today(),
-<<<<<<< HEAD
-=======
             'status' => Reservasi::MENUNGGU,
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
         ]);
 
         return back()->with('success', 'Reservasi buku berhasil diajukan.');
     }
 
+    /** Anggota membatalkan reservasinya sendiri (hanya selama masih Menunggu). */
     public function batalkan(Reservasi $reservasi): RedirectResponse
     {
-<<<<<<< HEAD
-        if ($reservasi->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'petugas'], true)) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk membatalkan reservasi ini.');
-        }
-=======
-        // Anggota hanya boleh membatalkan reservasi miliknya sendiri.
         abort_unless($reservasi->user_id === Auth::id(), 403);
 
         if ($reservasi->status !== Reservasi::MENUNGGU) {
@@ -87,12 +89,43 @@ class ReservasiController extends Controller
         }
 
         $reservasi->update(['status' => Reservasi::DIBATALKAN]);
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
-
-        $reservasi->update([
-            'status' => 'Dibatalkan',
-        ]);
 
         return back()->with('success', 'Reservasi berhasil dibatalkan.');
+    }
+
+    /**
+     * Petugas/admin memproses reservasi:
+     *  Menunggu -> Diproses  (hanya jika stok buku sudah tersedia)
+     *  Diproses -> Selesai   (anggota sudah mengambil/meminjam buku)
+     *  Menunggu/Diproses -> Dibatalkan
+     */
+    public function ubahStatus(Request $request, Reservasi $reservasi): RedirectResponse
+    {
+        $request->validate([
+            'status' => ['required', 'in:'.Reservasi::DIPROSES.','.Reservasi::SELESAI.','.Reservasi::DIBATALKAN],
+        ]);
+
+        $baru = $request->status;
+
+        if (in_array($reservasi->status, [Reservasi::SELESAI, Reservasi::DIBATALKAN], true)) {
+            return back()->with('error', 'Reservasi ini sudah selesai atau dibatalkan.');
+        }
+
+        if ($baru === Reservasi::DIPROSES) {
+            if ($reservasi->status !== Reservasi::MENUNGGU) {
+                return back()->with('error', 'Hanya reservasi berstatus Menunggu yang bisa diproses.');
+            }
+            if (($reservasi->buku->stok ?? 0) < 1) {
+                return back()->with('error', 'Stok buku masih kosong, reservasi belum bisa diproses.');
+            }
+        }
+
+        if ($baru === Reservasi::SELESAI && $reservasi->status !== Reservasi::DIPROSES) {
+            return back()->with('error', 'Reservasi harus diproses dulu sebelum diselesaikan.');
+        }
+
+        $reservasi->update(['status' => $baru]);
+
+        return back()->with('success', 'Status reservasi diperbarui menjadi '.$baru.'.');
     }
 }

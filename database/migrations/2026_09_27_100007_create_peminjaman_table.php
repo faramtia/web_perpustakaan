@@ -16,8 +16,14 @@ return new class extends Migration
                 $table->date('tanggal_kembali')->nullable();
                 $table->string('status', 50)->default('Dipinjam');
                 $table->date('tanggal_jatuh_tempo')->nullable();
+
                 $table->primary('id');
-                $table->foreign('user_id')->references('id')->on('user')->cascadeOnDelete()->cascadeOnUpdate();
+
+                $table->foreign('user_id')
+                    ->references('id')
+                    ->on('user')
+                    ->cascadeOnDelete()
+                    ->cascadeOnUpdate();
             });
         }
     }

@@ -8,8 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Buku extends Model
 {
-    public $timestamps = false; 
     protected $table = 'buku';
+
+    /** Hanya buku (novel, komik, dst.) — bukan skripsi, laporan, jurnal, dan karya ilmiah lain. */
+    public function scopeHanyaBuku($query)
+    {
+        return $query->whereHas('tipeKoleksi', fn ($t) => $t->whereNotIn('nama_tipe', TipeKoleksi::NON_BUKU));
+    }
+
+
+    public $timestamps = false;
 
     protected $fillable = [
         'kategori_id', 'lokasi_id', 'tipe_koleksi_id',
@@ -41,8 +49,9 @@ class Buku extends Model
         return $this->hasMany(Reservasi::class);
     }
 
+    /** Kolom stok di database bernama `stok` (bukan `jumlah`). */
     public function tersedia(): bool
     {
-        return $this->jumlah > 0;
+        return (int) $this->stok > 0;
     }
 }

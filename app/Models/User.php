@@ -3,58 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-<<<<<<< HEAD
-    protected $table = 'user';
-=======
     // Tabel di database bernama "user" (bukan "users") dan tidak punya created_at/updated_at.
     protected $table = 'user';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'nama', 'email', 'password', 'jenis_user_id', 'nim_nip', 'password', 'remember_token',
+        'jenis_user_id', 'nama', 'nim_nip', 'email', 'password', 'remember_token',
     ];
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
 
-    protected $guarded = [];
+    protected $hidden = ['password', 'remember_token'];
 
-    // Accessor role membaca jenis_user_id (misal: 4 = petugas)
-    public function getRoleAttribute()
+    protected function casts(): array
     {
-<<<<<<< HEAD
-        // 1. Jika kolom role di tabel user ada isinya
-        if (! empty($this->attributes['role'])) {
-            return strtolower(trim($this->attributes['role']));
-        }
-
-        // 2. Pemetaan berdasarkan ID jenis_user_id
-        $jenisId = $this->attributes['jenis_user_id'] ?? null;
-
-        if ($jenisId == 4) {
-            return 'petugas';
-        }
-
-        // 3. Fallback: Ambil nama dari tabel jenis_user jika ID lain
-        if (! empty($jenisId)) {
-            $jenis = DB::table('jenis_user')->where('id', $jenisId)->first();
-            if ($jenis) {
-                return strtolower(trim($jenis->nama_jenis ?? $jenis->nama ?? $jenis->jenis ?? ''));
-            }
-        }
-
-        return '';
-    }
-
-=======
         return [
             // 'hashed' otomatis meng-hash password saat disimpan.
             'password' => 'hashed',
@@ -66,18 +36,15 @@ class User extends Authenticatable
         return $this->belongsTo(JenisUser::class, 'jenis_user_id');
     }
 
-    /**
-     * Supaya semua Blade lama yang memakai $user->name tetap jalan,
-     * walau kolom di database bernama "nama".
-     */
+    /** Supaya Blade yang memakai $user->name tetap jalan, walau kolomnya bernama "nama". */
     public function getNameAttribute(): ?string
     {
         return $this->nama;
     }
 
     /**
-     * Role selalu dikembalikan huruf kecil ('admin', 'petugas', 'mahasiswa', 'dosen'),
-     * karena di database tertulis 'Admin', 'Mahasiswa', 'Dosen', 'petugas' (campur).
+     * Role selalu huruf kecil ('admin', 'petugas', 'mahasiswa', 'dosen'),
+     * karena penulisan di tabel jenis_user bisa campur ('Admin', 'Petugas', ...).
      */
     public function getRoleAttribute(): ?string
     {
@@ -96,18 +63,16 @@ class User extends Authenticatable
         return $this->role === 'petugas';
     }
 
-    public function isMahasiswa(): bool
+    public function isStaff(): bool
     {
-        return $this->role === 'mahasiswa';
+        return in_array($this->role, ['admin', 'petugas'], true);
     }
 
-    public function isDosen(): bool
+    public function isAnggota(): bool
     {
-        return $this->role === 'dosen';
+        return in_array($this->role, ['mahasiswa', 'dosen'], true);
     }
 
-    // --- Relasi transaksi ---
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
     public function peminjaman(): HasMany
     {
         return $this->hasMany(Peminjaman::class, 'user_id');
@@ -117,9 +82,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reservasi::class, 'user_id');
     }
-<<<<<<< HEAD
-}
-=======
 
     public function absensi(): HasMany
     {
@@ -141,4 +103,3 @@ class User extends Authenticatable
         return $this->hasMany(Artikel::class, 'user_id');
     }
 }
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3

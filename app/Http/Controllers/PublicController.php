@@ -4,35 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\Artikel;
 use App\Models\Buku;
+use App\Models\Event;
+use App\Models\TugasAkhir;
 
 class PublicController extends Controller
 {
     public function home()
     {
         return view('public.home', [
-            'totalKoleksi' => Buku::sum('stok'),
-            'totalJudul' => Buku::count(),
-<<<<<<< HEAD
-            'koleksiBaru' => Buku::orderBy('id', 'desc')->take(5)->get(),
-=======
+            'totalKoleksi' => (int) Buku::hanyaBuku()->sum('stok'),
+            'totalJudul' => Buku::hanyaBuku()->count(),
+            'totalTugasAkhir' => TugasAkhir::where('status', TugasAkhir::DISETUJUI)->count(),
 
-            'koleksiBaru' => Buku::orderByDesc('tahun_terbit')
-                ->take(3)
-                ->get(),
+            'koleksiBaru' => Buku::hanyaBuku()->with('kategori')->orderByDesc('id')->take(5)->get(),
 
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
-            'koleksiPopuler' => Buku::withCount('detailPeminjaman')
+            'koleksiPopuler' => Buku::hanyaBuku()->with('kategori')
+                ->withCount('detailPeminjaman')
                 ->orderByDesc('detail_peminjaman_count')
+                ->orderBy('judul')
+                ->take(5)
+                ->get(),
+
+            'artikel' => Artikel::with(['kategori', 'penulis'])
+                ->orderByDesc('tanggal_upload')
+                ->orderByDesc('id')
                 ->take(3)
                 ->get(),
 
-            'artikel' => Artikel::with('kategori')->orderByDesc('tanggal_upload')
+            'eventMendatang' => Event::withCount('peserta')
+                ->whereDate('tanggal_mulai', '>=', today())
+                ->orderBy('tanggal_mulai')
                 ->take(3)
                 ->get(),
-<<<<<<< HEAD
-            'artikel' => Artikel::orderBy('tanggal_upload', 'desc')->take(3)->get(),
-=======
->>>>>>> 5599154d47bfc8afee700f5d1a47068063fd88e3
+        ]);
+    }
+
+    /**
+     * Halaman "Tentang Kami" (About) untuk pengunjung umum.
+     * Data diambil dari situs resmi PNL: library.pnl.ac.id & pustaka.pnl.ac.id.
+     */
+    public function about()
+    {
+        $foto = 'https://library.pnl.ac.id/images/persons/';
+
+        return view('public.about', [
+            'pustakawan' => [
+                ['nama' => 'Mulyadi Alamsyah', 'jabatan' => 'Pustakawan Senior', 'surel' => null, 'sosmed' => null, 'foto' => $foto.'user_mulyadi.JPG'],
+                ['nama' => 'Safriah', 'jabatan' => 'Pustakawan Senior', 'surel' => 'safriah0105@gmail.com', 'sosmed' => null, 'foto' => $foto.'user_safriah.JPG'],
+                ['nama' => 'Nurul Hayati', 'jabatan' => 'Pustakawan Senior', 'surel' => null, 'sosmed' => null, 'foto' => $foto.'user_nurul.png'],
+                ['nama' => 'Usman', 'jabatan' => 'Pustakawan Senior', 'surel' => null, 'sosmed' => null, 'foto' => $foto.'user_usman.JPG'],
+                ['nama' => 'Amiruddin, S.I.Pust.', 'jabatan' => 'Pustakawan Senior', 'surel' => 'aminuddin@pnl.ac.id', 'sosmed' => null, 'foto' => $foto.'user_amir.jpg'],
+                ['nama' => 'Maryani', 'jabatan' => 'Pustakawan Senior', 'surel' => null, 'sosmed' => null, 'foto' => $foto.'user_maryani.JPG'],
+                ['nama' => 'Fauzah', 'jabatan' => 'Pustakawan', 'surel' => null, 'sosmed' => 'YouTube: pnl', 'foto' => $foto.'user_fauzah.png'],
+                ['nama' => 'Rizki Dimas Sagara Nasution', 'jabatan' => 'Pustakawan', 'surel' => 'dimassagaranst@gmail.com', 'sosmed' => null, 'foto' => null],
+            ],
         ]);
     }
 }

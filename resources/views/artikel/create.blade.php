@@ -1,34 +1,22 @@
 @extends('layouts.app')
 @section('title', 'Tulis Artikel')
-@section('page-title', 'Tulis Artikel')
 
 @section('content')
+    <x-page-header icon="bi-pencil-square" title="Tulis Artikel" subtitle="Artikel akan tampil di halaman Artikel & Blog." />
 
-    <form method="POST" action="{{ route('admin.artikel.store') }}" class="bg-white border rounded-xl p-6 max-w-2xl space-y-4">
+    <form method="POST" action="{{ route('admin.artikel.store') }}" class="card max-w-3xl space-y-4 p-6">
         @csrf
-
+        <div><label class="label">Judul</label><input type="text" name="judul" value="{{ old('judul') }}" required maxlength="250" class="input"></div>
         <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Judul</label>
-            <input type="text" name="judul" required class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Kategori</label>
-            <select name="kategori_id" required class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400">
-                @foreach ($kategori as $k)
-                    <option value="{{ $k->id }}" @selected(old('kategori_id') == $k->id)>{{ $k->nama_kategori }}</option>
-                @endforeach
+            <label class="label">Kategori</label>
+            <select name="kategori_id" required class="input">
+                @foreach ($kategori as $k)<option value="{{ $k->id }}" @selected(old('kategori_id') == $k->id)>{{ $k->nama_kategori }}</option>@endforeach
             </select>
         </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Konten</label>
-            <textarea name="isi_artikel" rows="8" required class="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400"></textarea>
+        <div><label class="label">Isi artikel</label><textarea name="isi_artikel" rows="10" required class="input">{{ old('isi_artikel') }}</textarea></div>
+        <div class="flex gap-3">
+            <button class="btn btn-primary"><i class="bi bi-send"></i> Publikasikan</button>
+            <a href="{{ route('artikel.index') }}" class="btn btn-soft">Batal</a>
         </div>
-
-        <button class="bg-gold-600 hover:bg-gold-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
-            Publikasikan
-        </button>
     </form>
-
 @endsection
