@@ -15,30 +15,56 @@
         @endif
     </x-page-header>
 
-    <form method="GET" class="card mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div class="relative lg:col-span-2">
-            <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="Judul, penulis, penerbit, ISBN..." class="input pl-10">
-        </div>
-        <select name="kategori" class="input">
-            <option value="">Semua kategori</option>
-            @foreach ($kategori as $k)
-                <option value="{{ $k->id }}" @selected(request('kategori') == $k->id)>{{ $k->nama_kategori }}</option>
-            @endforeach
-        </select>
-        <select name="tipe" class="input">
-            <option value="">Semua tipe koleksi</option>
-            @foreach ($tipeKoleksi as $t)
-                <option value="{{ $t->id }}" @selected(request('tipe') == $t->id)>{{ $t->nama_tipe }}</option>
-            @endforeach
-        </select>
-        <div class="flex gap-2">
+    <form method="GET" class="card mb-4 p-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="relative lg:col-span-2">
+                <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Judul, penulis, penerbit, ISBN..." class="input pl-10">
+            </div>
+            <select name="kategori" class="input">
+                <option value="">Semua kategori</option>
+                @foreach ($kategori as $k)
+                    <option value="{{ $k->id }}" @selected(request('kategori') == $k->id)>{{ $k->nama_kategori }}</option>
+                @endforeach
+            </select>
+            <select name="tipe" class="input">
+                <option value="">Semua tipe koleksi</option>
+                @foreach ($tipeKoleksi as $t)
+                    <option value="{{ $t->id }}" @selected(request('tipe') == $t->id)>{{ $t->nama_tipe }}</option>
+                @endforeach
+            </select>
             <select name="ketersediaan" class="input">
                 <option value="">Semua stok</option>
                 <option value="tersedia" @selected(request('ketersediaan') === 'tersedia')>Tersedia</option>
                 <option value="habis" @selected(request('ketersediaan') === 'habis')>Habis</option>
             </select>
-            <button class="btn btn-primary">Cari</button>
+        </div>
+
+        <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <select name="penulis" class="input">
+                <option value="">Semua penulis</option>
+                @foreach ($daftarPenulis as $nama)
+                    <option value="{{ $nama }}" @selected(request('penulis') === $nama)>{{ $nama }}</option>
+                @endforeach
+            </select>
+            <select name="penerbit" class="input">
+                <option value="">Semua penerbit</option>
+                @foreach ($daftarPenerbit as $nama)
+                    <option value="{{ $nama }}" @selected(request('penerbit') === $nama)>{{ $nama }}</option>
+                @endforeach
+            </select>
+            <select name="tahun" class="input">
+                <option value="">Semua tahun terbit</option>
+                @foreach ($daftarTahun as $th)
+                    <option value="{{ $th }}" @selected((string) request('tahun') === (string) $th)>{{ $th }}</option>
+                @endforeach
+            </select>
+            <div class="flex gap-2 lg:col-span-2">
+                <button class="btn btn-primary"><i class="bi bi-search"></i> Cari</button>
+                @if (request()->hasAny(['q', 'kategori', 'tipe', 'ketersediaan', 'penulis', 'penerbit', 'tahun']))
+                    <a href="{{ url()->current() }}" class="btn btn-soft">Reset</a>
+                @endif
+            </div>
         </div>
     </form>
 

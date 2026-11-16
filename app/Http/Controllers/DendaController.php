@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Denda;
+use App\Models\DetailPeminjaman;
 use App\Models\Peminjaman;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,13 @@ class DendaController extends Controller
         $denda = (clone $base)
             ->with(['peminjaman.user.jenisUser', 'peminjaman.detail.buku'])
             ->when(in_array($request->status, [Denda::BELUM_LUNAS, Denda::LUNAS], true), fn ($q) => $q->where('status_bayar', $request->status))
+            ->when(in_array($request->jenis, [Denda::TERLAMBAT, Denda::RUSAK, Denda::HILANG], true), fn ($q) => $q->where('jenis', $request->jenis))
+            ->when($request->filled('q') && $user->isStaff(), function ($q) use ($request) {
+                $kata = trim($request->q);
+                $q->whereHas('peminjaman', fn ($p) => $p
+                    ->whereHas('user', fn ($u) => $u->where('nama', 'like', "%{$kata}%")->orWhere('nim_nip', 'like', "%{$kata}%"))
+                    ->orWhereHas('detail.buku', fn ($b) => $b->where('judul', 'like', "%{$kata}%")));
+            })
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
@@ -54,39 +62,52 @@ class DendaController extends Controller
             'totalBelumLunas' => (int) $totalBelumLunas,
             'totalLunas' => (int) $totalLunas,
             'jumlahBelumLunas' => $jumlahBelumLunas,
-            // Daftar transaksi untuk form "catat denda rusak/hilang" (khusus staf).
-            'transaksi' => $user->isStaff()
-                ? Peminjaman::with(['user', 'detail.buku'])
-                    ->whereIn('status', [Peminjaman::DIPINJAM, Peminjaman::DIKEMBALIKAN])
-                    ->latest('id')->take(100)->get()
+            // Buku-buku yang pernah dipinjam, untuk form "catat denda rusak/hilang" (khusus staf).
+            'daftarBuku' => $user->isStaff()
+                ? DetailPeminjaman::with(['buku', 'peminjaman.user'])
+                    ->whereHas('peminjaman', fn ($q) => $q->whereIn('status', [Peminjaman::DIPINJAM, Peminjaman::DIKEMBALIKAN]))
+                    ->latest('id')->take(150)->get()
                 : collect(),
+            'ketentuan' => config('perpus.denda_kerusakan'),
         ]);
     }
 
-    /** Catat denda manual (buku rusak / hilang). Denda terlambat dicatat otomatis saat pengembalian. */
+    /**
+     * Catat denda buku rusak / hilang. Denda terlambat dicatat otomatis saat pengembalian.
+     * Tingkat kerusakan memberi nominal default (config/perpus.php); petugas boleh mengubah nominalnya.
+     */
     public function store(Request $request): RedirectResponse
     {
+        $ketentuan = config('perpus.denda_kerusakan');
+
         $data = $request->validate([
-            'peminjaman_id' => ['required', 'exists:peminjaman,id'],
-            'jenis' => ['required', 'in:'.Denda::RUSAK.','.Denda::HILANG],
+            'detail_peminjaman_id' => ['required', 'exists:detail_peminjaman,id'],
+            'tingkat' => ['required', 'in:'.implode(',', array_keys($ketentuan))],
             'jumlah_denda' => ['required', 'integer', 'min:1000', 'max:10000000'],
-            'keterangan' => ['nullable', 'string', 'max:255'],
+            'keterangan' => ['nullable', 'string', 'max:200'],
         ], [
-            'peminjaman_id.required' => 'Pilih transaksi peminjaman.',
+            'detail_peminjaman_id.required' => 'Pilih buku yang rusak atau hilang.',
+            'tingkat.required' => 'Pilih tingkat kerusakan.',
             'jumlah_denda.required' => 'Nominal denda wajib diisi.',
             'jumlah_denda.min' => 'Nominal denda minimal Rp1.000.',
         ]);
 
-        Denda::buat(Peminjaman::findOrFail($data['peminjaman_id']), [
-            'jenis' => $data['jenis'],
+        $detail = DetailPeminjaman::with('peminjaman')->findOrFail($data['detail_peminjaman_id']);
+        $aturan = $ketentuan[$data['tingkat']];
+
+        $keterangan = $aturan['label'].($data['keterangan'] ? ': '.$data['keterangan'] : '');
+
+        Denda::buat($detail->peminjaman, [
+            'detail_peminjaman_id' => $detail->id,
+            'jenis' => $aturan['jenis'],
             'hari_terlambat' => 0,
             'tarif_per_hari' => 0,
             'jumlah_denda' => $data['jumlah_denda'],
             'status_bayar' => Denda::BELUM_LUNAS,
-            'keterangan' => $data['keterangan'] ?? ($data['jenis'] === Denda::RUSAK ? 'Buku rusak' : 'Buku hilang'),
+            'keterangan' => mb_substr($keterangan, 0, 255),
         ]);
 
-        return back()->with('success', 'Denda berhasil dicatat.');
+        return back()->with('success', 'Denda '.strtolower($aturan['label']).' berhasil dicatat.');
     }
 
     public function bayar(Denda $denda): RedirectResponse

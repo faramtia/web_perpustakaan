@@ -54,22 +54,83 @@
     @endif
 
     @if ($staff)
-        <form method="POST" action="{{ route('petugas.denda.store') }}" class="card mb-6 grid grid-cols-1 gap-3 p-5 md:grid-cols-5">
-            @csrf
-            <h2 class="font-bold md:col-span-5">Catat denda buku rusak / hilang</h2>
-            <select name="peminjaman_id" required class="input md:col-span-2">
-                <option value="">Pilih transaksi...</option>
-                @foreach ($transaksi as $t)
-                    <option value="{{ $t->id }}" @selected(old('peminjaman_id') == $t->id)>#{{ $t->id }} · {{ $t->user->nama ?? '-' }} · {{ \Illuminate\Support\Str::limit($t->judul_buku, 40) }}</option>
+        <div class="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {{-- Form catat denda rusak / hilang --}}
+            <form method="POST" action="{{ route('petugas.denda.store') }}" class="card grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:col-span-2">
+                @csrf
+                <div class="sm:col-span-2">
+                    <h2 class="font-bold">Catat denda buku rusak / hilang</h2>
+                    <p class="text-xs text-stone-500">Pilih buku yang bermasalah dan tingkat kerusakannya. Nominal terisi otomatis sesuai ketentuan, dan boleh diubah.</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="label">Buku yang rusak / hilang</label>
+                    <select name="detail_peminjaman_id" required class="input">
+                        <option value="">Pilih buku (dari riwayat peminjaman)...</option>
+                        @foreach ($daftarBuku as $d)
+                            <option value="{{ $d->id }}" @selected(old('detail_peminjaman_id') == $d->id)>
+                                #{{ $d->peminjaman_id }} · {{ $d->peminjaman->user->nama ?? '-' }} · {{ \Illuminate\Support\Str::limit($d->buku->judul ?? '-', 45) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label">Tingkat kerusakan</label>
+                    <select name="tingkat" id="tingkat" required class="input">
+                        <option value="">Pilih tingkat...</option>
+                        @foreach ($ketentuan as $kode => $k)
+                            <option value="{{ $kode }}" data-nominal="{{ $k['nominal'] }}" @selected(old('tingkat') === $kode)>{{ $k['label'] }} (Rp {{ number_format($k['nominal'], 0, ',', '.') }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="label">Nominal denda (Rp)</label>
+                    <input type="number" name="jumlah_denda" id="nominal" value="{{ old('jumlah_denda') }}" min="1000" step="500" required class="input">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="label">Keterangan <span class="font-normal text-stone-400">(opsional)</span></label>
+                    <input type="text" name="keterangan" value="{{ old('keterangan') }}" maxlength="200" placeholder="Contoh: halaman 20-35 sobek" class="input">
+                </div>
+                <div class="sm:col-span-2"><button class="btn btn-primary"><i class="bi bi-plus-lg"></i> Catat Denda</button></div>
+            </form>
+
+            {{-- Ketentuan denda --}}
+            <div class="card p-5">
+                <h2 class="mb-3 font-bold">Ketentuan denda</h2>
+                <ul class="space-y-3 text-sm">
+                    <li>
+                        <p class="font-semibold text-stone-800">Terlambat</p>
+                        <p class="text-xs text-stone-500">Rp1.000 per hari, dihitung otomatis saat buku dikembalikan.</p>
+                    </li>
+                    @foreach ($ketentuan as $k)
+                        <li>
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="font-semibold text-stone-800">{{ $k['label'] }}</p>
+                                <span class="chip bg-yellow-100 text-yellow-700">Rp {{ number_format($k['nominal'], 0, ',', '.') }}</span>
+                            </div>
+                            <p class="text-xs text-stone-500">{{ $k['contoh'] }}</p>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <form method="GET" class="card mb-4 flex flex-wrap items-center gap-3 p-4">
+            @if (request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+            <div class="relative min-w-[220px] flex-1">
+                <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama, NIM/NIP, atau judul buku..." class="input pl-10">
+            </div>
+            <select name="jenis" class="input max-w-[11rem]">
+                <option value="">Semua jenis</option>
+                @foreach (['terlambat' => 'Terlambat', 'rusak' => 'Rusak', 'hilang' => 'Hilang'] as $v => $l)
+                    <option value="{{ $v }}" @selected(request('jenis') === $v)>{{ $l }}</option>
                 @endforeach
             </select>
-            <select name="jenis" required class="input">
-                <option value="rusak" @selected(old('jenis') === 'rusak')>Rusak</option>
-                <option value="hilang" @selected(old('jenis') === 'hilang')>Hilang</option>
-            </select>
-            <input type="number" name="jumlah_denda" value="{{ old('jumlah_denda') }}" min="1000" step="500" required placeholder="Nominal (Rp)" class="input">
-            <input type="text" name="keterangan" value="{{ old('keterangan') }}" maxlength="255" placeholder="Keterangan" class="input md:col-span-4">
-            <button class="btn btn-primary"><i class="bi bi-plus-lg"></i> Catat</button>
+            <button class="btn btn-primary">Cari</button>
+            @if (request()->hasAny(['q', 'jenis']))<a href="{{ route('petugas.denda.index', request('status') ? ['status' => request('status')] : []) }}" class="btn btn-soft">Reset</a>@endif
+            <a href="{{ route('petugas.laporan.show', 'denda') }}" class="btn btn-soft ml-auto"><i class="bi bi-file-earmark-text"></i> Laporan Denda</a>
         </form>
     @endif
 
@@ -88,8 +149,11 @@
                 @forelse ($denda as $d)
                     <tr>
                         @if ($staff)<td><x-user-cell :user="$d->peminjaman->user" /></td>@endif
-                        <td class="max-w-xs truncate">{{ $d->peminjaman?->judul_buku ?? '-' }}</td>
-                        <td><span class="chip bg-stone-100 text-stone-600 capitalize">{{ $d->jenis }}</span></td>
+                        <td class="max-w-xs"><p class="truncate font-medium text-stone-800">{{ $d->detail?->buku?->judul ?? $d->peminjaman?->judul_buku ?? '-' }}</p><p class="text-xs text-stone-400">Transaksi #{{ $d->peminjaman_id }}</p></td>
+                        <td>
+                            <span class="chip capitalize {{ ['terlambat' => 'bg-orange-100 text-orange-700', 'rusak' => 'bg-amber-100 text-amber-700', 'hilang' => 'bg-red-100 text-red-600'][$d->jenis] ?? 'bg-stone-100 text-stone-600' }}">{{ $d->jenis }}</span>
+                            @if ($d->hari_terlambat > 0)<p class="mt-1 text-xs text-stone-400">{{ $d->hari_terlambat }} hari × Rp {{ number_format($d->tarif_per_hari, 0, ',', '.') }}</p>@endif
+                        </td>
                         <td class="text-stone-500">{{ $d->keterangan ?: '-' }}</td>
                         <td class="whitespace-nowrap font-semibold">{{ $rp($d->jumlah_denda) }}</td>
                         <td>
@@ -117,4 +181,14 @@
     </div>
 
     <div class="mt-4">{{ $denda->links() }}</div>
+
+@push('scripts')
+<script>
+    // Isi nominal otomatis sesuai ketentuan tingkat kerusakan (masih bisa diubah).
+    document.getElementById('tingkat')?.addEventListener('change', function () {
+        const nominal = this.selectedOptions[0]?.dataset.nominal;
+        if (nominal) document.getElementById('nominal').value = nominal;
+    });
+</script>
+@endpush
 @endsection

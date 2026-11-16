@@ -7,6 +7,17 @@
     <x-page-header icon="bi-calendar-check" :title="$staff ? 'Daftar Reservasi' : 'Reservasi Saya'"
         :subtitle="$staff ? 'Proses reservasi buku yang diajukan anggota.' : 'Reservasi untuk buku yang stoknya sedang habis.'" />
 
+    @if (! $staff && ($notifReservasi ?? collect())->isNotEmpty())
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <p class="mb-2 font-bold text-emerald-800"><i class="bi bi-bell-fill mr-1"></i> Buku reservasimu sudah tersedia!</p>
+            <ul class="space-y-1 text-sm text-emerald-800">
+                @foreach ($notifReservasi as $n)
+                    <li><i class="bi bi-book mr-1"></i><strong>{{ $n->buku->judul }}</strong> &mdash; {{ $n->buku->stok }} eksemplar tersedia. Segera datang ke perpustakaan atau ajukan peminjaman.</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if (! $staff)
         <div class="card mb-6 p-5">
             <h2 class="mb-1 font-bold">Reservasi buku baru</h2>
@@ -64,7 +75,12 @@
                             @php $stok = (int) ($r->buku->stok ?? 0); @endphp
                             <span class="chip {{ $stok > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' }}">{{ $stok > 0 ? $stok.' tersedia' : 'habis' }}</span>
                         </td>
-                        <td><x-status-badge :status="$r->status" /></td>
+                        <td>
+                            <x-status-badge :status="$r->status" />
+                            @if (! $staff && $stok > 0 && in_array($r->status, ['Menunggu', 'Diproses']))
+                                <span class="chip ml-1 bg-emerald-100 text-emerald-700"><i class="bi bi-bell-fill"></i> Tersedia</span>
+                            @endif
+                        </td>
                         <td>
                             <div class="flex justify-end gap-2">
                                 @if ($staff && in_array($r->status, ['Menunggu', 'Diproses']))

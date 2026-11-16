@@ -32,6 +32,7 @@
             <input type="checkbox" name="remember" class="rounded border-stone-300 text-yellow-500 focus:ring-yellow-300" @checked(old('remember'))>
             Ingat saya
         </label>
+        <a href="{{ route('password.request') }}" class="-mt-2 block text-right text-xs font-semibold text-yellow-700 hover:underline">Lupa password?</a>
 
         <button type="submit" class="btn btn-primary w-full">Masuk</button>
     </form>

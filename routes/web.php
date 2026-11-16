@@ -5,7 +5,9 @@ use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\Anggota\DashboardController as AnggotaDashboardController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\UbahSandiController;
 use App\Http\Controllers\BukuController;
 use App\Http\Controllers\DendaController;
 use App\Http\Controllers\EventController;
@@ -34,6 +36,7 @@ Route::get('/tentang', [PublicController::class, 'about'])->name('about');
 
 Route::get('/katalog', [BukuController::class, 'index'])->name('katalog.index');
 Route::get('/tugas-akhir', [TugasAkhirController::class, 'publik'])->name('tugas-akhir.index');
+Route::get('/tugas-akhir/{tugasAkhir}', [TugasAkhirController::class, 'show'])->whereNumber('tugasAkhir')->name('tugas-akhir.show');
 Route::get('/artikel', [ArtikelController::class, 'index'])->name('artikel.index');
 Route::get('/artikel/{artikel}', [ArtikelController::class, 'show'])->whereNumber('artikel')->name('artikel.show');
 Route::get('/event', [EventController::class, 'index'])->name('event.index');
@@ -62,10 +65,23 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store']);
+
+    // Lupa sandi (tautan reset dikirim lewat email)
+    Route::get('/lupa-password', [PasswordResetController::class, 'formLupa'])->name('password.request');
+    Route::post('/lupa-password', [PasswordResetController::class, 'kirimTautan'])->middleware('throttle:6,1')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'formReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'simpanReset'])->middleware('throttle:6,1')->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    // Ubah sandi (semua peran yang sudah login)
+    Route::get('/tugas-akhir/{tugasAkhir}/berkas', [TugasAkhirController::class, 'berkas'])->whereNumber('tugasAkhir')->name('tugas-akhir.berkas');
+    Route::get('/tugas-akhir/{tugasAkhir}/unduh', [TugasAkhirController::class, 'unduh'])->whereNumber('tugasAkhir')->name('tugas-akhir.unduh');
+
+    Route::get('/akun/sandi', [UbahSandiController::class, 'edit'])->name('password.ubah');
+    Route::put('/akun/sandi', [UbahSandiController::class, 'update'])->name('password.ubah.update');
 
     // Pintasan: arahkan ke dashboard sesuai role.
     Route::get('/dashboard', [AuthenticatedSessionController::class, 'dashboard'])->name('dashboard');
@@ -142,6 +158,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/feedback/{feedback}/balas', [FeedbackController::class, 'balas'])->name('feedback.balas');
 
         Route::get('/tugas-akhir', [TugasAkhirController::class, 'index'])->name('tugas-akhir.index');
+        Route::post('/tugas-akhir', [TugasAkhirController::class, 'store'])->name('tugas-akhir.store');
+        Route::post('/tugas-akhir/{tugasAkhir}/berkas', [TugasAkhirController::class, 'ubahBerkas'])->name('tugas-akhir.berkas.update');
         Route::post('/tugas-akhir/{tugasAkhir}/review', [TugasAkhirController::class, 'review'])->name('tugas-akhir.review');
 
         Route::post('/gallery', [GalleryController::class, 'store'])->name('gallery.store');
@@ -149,7 +167,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/laporan/{jenis}', [LaporanController::class, 'show'])
-            ->whereIn('jenis', ['peminjaman', 'pengunjung', 'koleksi', 'denda'])
+            ->whereIn('jenis', ['peminjaman', 'pengunjung', 'koleksi', 'denda', 'kerusakan'])
             ->name('laporan.show');
     });
 
@@ -179,6 +197,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/event/{event}/daftar', [EventController::class, 'daftar'])->name('event.daftar');
 
         Route::get('/tugas-akhir', [TugasAkhirController::class, 'index'])->name('tugas-akhir.index');
-        Route::post('/tugas-akhir', [TugasAkhirController::class, 'store'])->name('tugas-akhir.store');
+        Route::post('/tugas-akhir', [TugasAkhirController::class, 'storeAnggota'])->name('tugas-akhir.store');
     });
 });

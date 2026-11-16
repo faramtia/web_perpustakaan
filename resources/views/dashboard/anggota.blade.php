@@ -68,7 +68,12 @@
                 @forelse ($reservasiSaya as $r)
                     <li class="flex items-center justify-between gap-3 py-2.5">
                         <span class="truncate text-stone-700">{{ $r->buku->judul ?? '-' }}</span>
-                        <x-status-badge :status="$r->status" />
+                        <span class="flex items-center gap-1">
+                            @if (in_array($r->status, ['Menunggu', 'Diproses']) && (int) ($r->buku->stok ?? 0) > 0)
+                                <span class="chip bg-emerald-100 text-emerald-700"><i class="bi bi-bell-fill"></i> Tersedia</span>
+                            @endif
+                            <x-status-badge :status="$r->status" />
+                        </span>
                     </li>
                 @empty
                     <li class="py-4 italic text-stone-400">Belum ada reservasi.</li>

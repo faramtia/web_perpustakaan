@@ -4,14 +4,15 @@
 @section('content')
 @php
     $kartu = [
-        ['peminjaman', 'Laporan Peminjaman', 'Riwayat transaksi peminjaman buku, dapat difilter tanggal.', 'bi-box-arrow-up-right'],
+        ['peminjaman', 'Laporan Peminjaman', 'Riwayat transaksi peminjaman buku; cari dan filter tanggal atau status.', 'bi-box-arrow-up-right'],
         ['pengunjung', 'Laporan Pengunjung', 'Kehadiran anggota dari data absensi.', 'bi-person-lines-fill'],
-        ['koleksi', 'Laporan Koleksi Buku', 'Daftar koleksi beserta stok dan lokasi rak.', 'bi-book'],
-        ['denda', 'Laporan Denda', 'Denda terlambat, rusak, dan hilang beserta status bayarnya.', 'bi-coin'],
+        ['koleksi', 'Laporan Koleksi Buku', 'Daftar koleksi beserta penulis, penerbit, stok, dan lokasi rak.', 'bi-book'],
+        ['denda', 'Laporan Denda', 'Denda terlambat, rusak, dan hilang; dapat difilter rentang tanggal dan status.', 'bi-coin'],
+        ['kerusakan', 'Laporan Kerusakan Buku', 'Buku rusak atau hilang beserta tingkat kerusakan dan dendanya.', 'bi-journal-x'],
     ];
 @endphp
 
-    <x-page-header icon="bi-bar-chart" title="Laporan" subtitle="Pilih laporan untuk dilihat, dicetak, atau diunduh sebagai CSV." />
+    <x-page-header icon="bi-bar-chart" title="Laporan" subtitle="Pilih laporan untuk dilihat, dicari, dicetak, atau diunduh sebagai CSV." />
 
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
         @foreach ($kartu as [$kode, $judul, $deskripsi, $ikon])

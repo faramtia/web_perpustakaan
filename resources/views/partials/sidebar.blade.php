@@ -120,6 +120,9 @@
                             <i class="bi {{ $icon }}"></i>
                         </span>
                         {{ $label }}
+                        @if ($route === 'anggota.reservasi.index' && ($notifReservasi ?? collect())->count() > 0)
+                            <span class="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{{ $notifReservasi->count() }}</span>
+                        @endif
                     </a>
                 @endforeach
             </div>
@@ -128,6 +131,11 @@
 
     {{-- Keluar --}}
     <div class="shrink-0 border-t border-stone-100 p-3">
+        <a href="{{ route('password.ubah') }}"
+           class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition {{ request()->routeIs('password.ubah*') ? 'bg-yellow-400 font-semibold text-stone-900' : 'text-stone-600 hover:bg-yellow-50 hover:text-stone-900' }}">
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-stone-100 text-base text-stone-500"><i class="bi bi-key"></i></span>
+            Ubah Sandi
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"

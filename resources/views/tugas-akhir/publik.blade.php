@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @forelse ($koleksi as $ta)
             <article class="card flex flex-col p-5 transition hover:ring-yellow-400 hover:shadow-md">
-                <h3 class="mb-1 font-bold leading-snug text-stone-800">{{ $ta->judul }}</h3>
+                <h3 class="mb-1 font-bold leading-snug text-stone-800"><a href="{{ route('tugas-akhir.show', $ta->id) }}" class="hover:text-yellow-700 hover:underline">{{ $ta->judul }}</a></h3>
                 <p class="text-xs text-stone-400"><i class="bi bi-person"></i> {{ $ta->user->nama ?? '-' }}</p>
                 @if ($ta->pembimbing)
                     <p class="mb-3 text-xs text-stone-400"><i class="bi bi-person-badge"></i> Pembimbing: {{ $ta->pembimbing }}</p>
@@ -24,8 +24,8 @@
                 <div class="mt-auto border-t border-stone-100 pt-3 text-sm" style="margin-top:1rem">
                     @auth
                         @if ($adaBerkas($ta->file_tugas))
-                            <a href="{{ asset('storage/'.$ta->file_tugas) }}" target="_blank" class="font-semibold text-yellow-700 hover:underline">
-                                <i class="bi bi-file-earmark-pdf"></i> Baca PDF
+                            <a href="{{ route('tugas-akhir.show', $ta->id) }}" class="font-semibold text-yellow-700 hover:underline">
+                                <i class="bi bi-file-earmark-pdf"></i> Lihat &amp; Unduh PDF
                             </a>
                         @else
                             <span class="text-xs text-stone-400">Berkas belum tersedia.</span>

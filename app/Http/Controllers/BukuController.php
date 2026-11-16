@@ -34,6 +34,9 @@ class BukuController extends Controller
                         ->orWhere('isbn', 'like', "%{$q}%");
                 });
             })
+            ->when($request->filled('penulis'), fn ($query) => $query->where('penulis', $request->penulis))
+            ->when($request->filled('penerbit'), fn ($query) => $query->where('penerbit', $request->penerbit))
+            ->when($request->filled('tahun'), fn ($query) => $query->where('tahun_terbit', $request->tahun))
             ->when($request->filled('kategori'), fn ($query) => $query->where('kategori_id', $request->kategori))
             ->when($request->filled('tipe'), fn ($query) => $query->where('tipe_koleksi_id', $request->tipe))
             ->when($request->ketersediaan === 'tersedia', fn ($query) => $query->where('stok', '>', 0))
@@ -42,8 +45,14 @@ class BukuController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Pilihan filter penulis / penerbit / tahun diambil dari data buku yang memang bisa dilihat pengguna.
+        $sumber = fn () => Buku::query()->when(! $staff, fn ($query) => $query->hanyaBuku());
+
         return view('buku.index', [
             'buku' => $buku,
+            'daftarPenulis' => $sumber()->whereNotNull('penulis')->where('penulis', '!=', '')->distinct()->orderBy('penulis')->pluck('penulis'),
+            'daftarPenerbit' => $sumber()->whereNotNull('penerbit')->where('penerbit', '!=', '')->distinct()->orderBy('penerbit')->pluck('penerbit'),
+            'daftarTahun' => $sumber()->whereNotNull('tahun_terbit')->distinct()->orderByDesc('tahun_terbit')->pluck('tahun_terbit'),
             'kategori' => Kategori::orderBy('nama_kategori')->get(),
             'tipeKoleksi' => TipeKoleksi::when(! $staff, fn ($t) => $t->whereNotIn('nama_tipe', TipeKoleksi::NON_BUKU))->orderBy('nama_tipe')->get(),
         ]);
